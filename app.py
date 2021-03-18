@@ -12,7 +12,7 @@ from datetime import date, timedelta
 import requests
 import scrapeTodaysGames as sc
 import trainAndExportModel as tm
-
+# I just shit
 app = Flask(__name__)
 
 #Daily function calls
