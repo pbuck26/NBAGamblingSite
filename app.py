@@ -12,14 +12,13 @@ from datetime import date, timedelta
 import requests
 import scrapeTodaysGames as sc
 import trainAndExportModel as tm
-# I just shit
+
 app = Flask(__name__)
 
 #Daily function calls
 # Will have to see if I can scrape data using webdriver on server
 Model  = tm.trainAndExportModel()
 games = sc.scrapeGamesAndOdds(Model)
-
 
 @app.route("/")
 def renderHomepage():
@@ -34,3 +33,26 @@ def renderHomepage():
 @app.route("/result',methods = ['POST']")
 def hello(temp):
     return
+        
+def getTeamStr(dictionary, number):
+    for key, value in dictionary.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
+        if value == number:
+            #print(key)
+            return key
+
+def getImpliedProbability(line):
+    if line > 0:
+        prob = 100/(line + 100)
+        return prob
+    else:
+        prob = abs(line)/(abs(line) + 100)
+        return prob
+
+def getPayout(odds, wager):
+    if odds > 0:
+        payout = (wager*odds)/100
+        return payout
+    else:
+        payout = (wager*100)/abs(odds)
+        return payout
+
