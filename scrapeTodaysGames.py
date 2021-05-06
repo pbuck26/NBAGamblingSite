@@ -37,78 +37,79 @@ def scrapeGamesAndOdds(Model):
     for game in range(len(source[0]['events'])):
         if source[0]['events'][game]['competitors']:
 
-            #For some reason this can be half moneyline
-            if '2H' in source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][0]['description']:
-                continue
+            try:#For some reason this can be half moneyline
+                if '2H' in source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][0]['description']:
+                    continue
 
-            # Don't care about live games for right now
-            if source[0]['events'][game]['displayGroups'][0]['markets'][0]['period']['description'] == 'Live Game':
-                continue
+                # Don't care about live games for right now
+                if source[0]['events'][game]['displayGroups'][0]['markets'][0]['period']['description'] == 'Live Game':
+                    continue
 
-            if source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][0]['type'] == 'H':
-                homeIndex = 0
-                awayIndex = 1
+                if source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][0]['type'] == 'H':
+                    homeIndex = 0
+                    awayIndex = 1
+                else:
+                    awayIndex = 0
+                    homeIndex = 1
+                
+                homeOdds.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][homeIndex]['price']['american'])
+                homeTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][homeIndex]['description'])
+                awayOdds.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['price']['american'])
+                awayTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['description'])
+                print("######################################################")
+                print(f'{homeTeam[-1]} ({homeOdds[-1]}) vs {awayTeam[-1]} ({awayOdds[-1]})')
+                beans = getTeamData4Model(df, homeTeam[-1], awayTeam[-1])
+                #prediction = Model.predict(beans)
+                predictionAcc = Model.predict_proba(beans)
+                if homeOdds[-1] == 'EVEN':
+                    homeOdds[-1] = '-100'
+                if awayOdds[-1] == 'EVEN':
+                    awayOdds[-1] = '-100'
+                predictionFaith.append(predictionAcc[0,1])
+                probHome  = getImpliedProbability(int(homeOdds[-1]))
+                #awayOdds[-1] = getImpliedProbability(int(awayOdds[-1]))
+
+                prediction = Model.predict(beans)
+                if prediction:
+                    pick = homeTeam[-1]
+                else:
+                    pick = awayTeam[-1]
+                
+                #stupid formatting
+                if homeTeam[-1] == "L.A. Clippers":
+                    homeTeam[-1] = "Los Angeles Clippers"
+                if awayTeam[-1] == "L.A. Clippers":
+                    awayTeam[-1] = "Los Angeles Clippers"
+                if pick == "L.A. Clippers":
+                    pick = "Los Angeles Clippers"
+                # Lakers section
+                if homeTeam[-1] == "L.A. Lakers":
+                    homeTeam[-1] = "Los Angeles Lakers"
+                if awayTeam[-1] == "L.A. Lakers":
+                    awayTeam[-1] = "Los Angeles Lakers"
+                if pick == "L.A. Lakers":
+                    pick = "Los Angeles Lakers"
+
+
+
+                homeTeam[-1] = homeTeam[-1].replace(" ", "%20")
+                awayTeam[-1] = awayTeam[-1].replace(" ", "%20")
+                pick = pick.replace(" ", "%20")
+                gameT = {
+                "homeOdds"    :homeOdds[-1],
+                "homeTeam"    :f"/static/{homeTeam[-1]}.png",
+                "awayTeam"    :f"/static/{awayTeam[-1]}.png",
+                "pick"        :f"/static/{pick}.png",
+                "prob"        :"{:.2f}".format(predictionFaith[-1]),
+                "vegas_prob"  :"{:.2f}".format(probHome)
+                }
+                games.append(gameT)
+                gameIndex +=1
+            except:
+                print('stinky shit!')
+
             else:
-                awayIndex = 0
-                homeIndex = 1
-            
-            homeOdds.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][homeIndex]['price']['american'])
-            homeTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][homeIndex]['description'])
-            awayOdds.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['price']['american'])
-            awayTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['description'])
-            print("######################################################")
-            print(f'{homeTeam[-1]} ({homeOdds[-1]}) vs {awayTeam[-1]} ({awayOdds[-1]})')
-            beans = getTeamData4Model(df, homeTeam[-1], awayTeam[-1])
-            #prediction = Model.predict(beans)
-            predictionAcc = Model.predict_proba(beans)
-            if homeOdds[-1] == 'EVEN':
-                homeOdds[-1] = '-100'
-            if awayOdds[-1] == 'EVEN':
-                awayOdds[-1] = '-100'
-            predictionFaith.append(predictionAcc[0,1])
-            probHome  = getImpliedProbability(int(homeOdds[-1]))
-            #awayOdds[-1] = getImpliedProbability(int(awayOdds[-1]))
-
-            prediction = Model.predict(beans)
-            if prediction:
-                pick = homeTeam[-1]
-            else:
-                pick = awayTeam[-1]
-            
-            #stupid formatting
-            if homeTeam[-1] == "L.A. Clippers":
-                homeTeam[-1] = "Los Angeles Clippers"
-            if awayTeam[-1] == "L.A. Clippers":
-                awayTeam[-1] = "Los Angeles Clippers"
-            if pick == "L.A. Clippers":
-                pick = "Los Angeles Clippers"
-            # Lakers section
-            if homeTeam[-1] == "L.A. Lakers":
-                homeTeam[-1] = "Los Angeles Lakers"
-            if awayTeam[-1] == "L.A. Lakers":
-                awayTeam[-1] = "Los Angeles Lakers"
-            if pick == "L.A. Lakers":
-                pick = "Los Angeles Lakers"
-
-
-
-            homeTeam[-1] = homeTeam[-1].replace(" ", "%20")
-            awayTeam[-1] = awayTeam[-1].replace(" ", "%20")
-            pick = pick.replace(" ", "%20")
-            gameT = {
-            "homeOdds"    :homeOdds[-1],
-            "homeTeam"    :f"/static/{homeTeam[-1]}.png",
-            "awayTeam"    :f"/static/{awayTeam[-1]}.png",
-            "pick"        :f"/static/{pick}.png",
-            "prob"        :"{:.2f}".format(predictionFaith[-1]),
-            "vegas_prob"  :"{:.2f}".format(probHome)
-            }
-            games.append(gameT)
-            gameIndex +=1
-
-        else:
-            continue
-
+                continue
     return games
 
 def getTeamData4Model(df, homeTeam, awayTeam):
