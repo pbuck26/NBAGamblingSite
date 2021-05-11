@@ -9,7 +9,6 @@ import scrapeTodaysGames as sc
 import logging
 import pickle
 import os
-import psycopg2
 
 app = Flask(__name__)
 
@@ -22,7 +21,7 @@ if ENV == 'dev':
     app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://patrickbuckley:#xk3Li626@localhost/GamblingApp"
 else:
     app.debug=False
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://ttldfegepauahb:7b97d6d0def97b011a9973648bfb23bcd189aa749218ee133689c31a834e4cdc@ec2-18-210-214-86.compute-1.amazonaws.com:5432/dc79hg2qi3adi7"
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://ttldfegepauahb:7b97d6d0def97b011a9973648bfb23bcd189aa749218ee133689c31a834e4cdc@ec2-18-210-214-86.compute-1.amazonaws.com:5432/dc79hg2qi3adi7"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
