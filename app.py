@@ -11,16 +11,16 @@ import pickle
 
 app = Flask(__name__)
 
-ENV= 'dev'
+ENV= 'prod'
 app.config['SECRET_KEY'] = 'POOP'
 logging.basicConfig(level=logging.DEBUG)
 
 if ENV == 'dev':
     app.debug= True
-    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://patrickbuckley:#xk3Li626@localhost"
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://patrickbuckley:#xk3Li626@localhost/GamblingApp"
 else:
     app.debug=False
-    app.config['SQLALCHEMY_DATABASE_URI'] = ""
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://ttldfegepauahb:7b97d6d0def97b011a9973648bfb23bcd189aa749218ee133689c31a834e4cdc@ec2-18-210-214-86.compute-1.amazonaws.com:5432/dc79hg2qi3adi7"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -58,6 +58,9 @@ def get_email():
     if "email" in request.form:
         email = request.form['email']
         password = request.form['pwd']
+        data = Users(email, password)
+        db.session.add(data)
+        db.session.commit()
         return request.form['email']
     else:
         app.logger.error('poopoo')
