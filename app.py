@@ -8,6 +8,8 @@ import requests
 import scrapeTodaysGames as sc
 import logging
 import pickle
+import os
+import psycopg2
 
 app = Flask(__name__)
 
