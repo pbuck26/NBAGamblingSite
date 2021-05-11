@@ -1,28 +1,45 @@
 from flask import Flask, request, render_template, jsonify, Response
+from flask_sqlalchemy import SQLAlchemy
 import json
 import sklearn
 from sklearn.naive_bayes import GaussianNB
-import pandas as pd
-import numpy as np
-import os
-from sportsreference.nba.schedule import Schedule
-from sportsreference.nba.boxscore import Boxscores, Boxscore
-from sportsreference.nba.teams import Teams
 from datetime import date, timedelta
 import requests
 import scrapeTodaysGames as sc
-import trainAndExportModel as tm
 import logging
-import pprint
+import pickle
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'POOP'
 
+ENV= 'dev'
+app.config['SECRET_KEY'] = 'POOP'
 logging.basicConfig(level=logging.DEBUG)
 
-#Daily function calls
-# Will have to see if I can scrape data using webdriver on server
-Model  = tm.trainAndExportModel()
+if ENV == 'dev':
+    app.debug= True
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://patrickbuckley:#xk3Li626@localhost"
+else:
+    app.debug=False
+    app.config['SQLALCHEMY_DATABASE_URI'] = ""
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db=SQLAlchemy(app)
+
+class Users(db.Model):
+    __tablename__='users'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(200))
+    password = db.Column(db.String(200))
+
+    def __init__(self, email, password):
+        self.email     =  email
+        self.password  = password
+
+# Unpickle model and make todays predictions
+app.logger.info('Importing Model!')
+Model = pickle.load(open('model.pkl','rb'))
+app.logger.info('Scraping Games!')
 games = sc.scrapeGamesAndOdds(Model)
 
 @app.route("/")
@@ -45,27 +62,5 @@ def get_email():
     else:
         app.logger.error('poopoo')
         
-def getTeamStr(dictionary, number):
-    for key, value in dictionary.items():  # for name, age in dictionary.iteritems():  (for Python 2.x)
-        if value == number:
-            #print(key)
-            return key
-
-def getImpliedProbability(line):
-    if line > 0:
-        prob = 100/(line + 100)
-        return prob
-    else:
-        prob = abs(line)/(abs(line) + 100)
-        return prob
-
-def getPayout(odds, wager):
-    if odds > 0:
-        payout = (wager*odds)/100
-        return payout
-    else:
-        payout = (wager*100)/abs(odds)
-        return payout
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

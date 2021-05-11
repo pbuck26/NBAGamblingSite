@@ -4,6 +4,7 @@ import os
 import sklearn
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import LabelEncoder
+import pickle
 
 # This function when called will return the trained model ready for making predictions
 # As of now it will scrape the data from a csv file
@@ -42,7 +43,7 @@ def trainAndExportModel():
     # score model
     score = bngModel.score(x_test, y_test)
     print(f"Score fo Bayes Model: {score}\n")
-    return bngModel
+    pickle.dump(bngModel, open('model.pkl', 'wb'))
 
 class MultiColumnLabelEncoder:
     def __init__(self,columns = None):
@@ -103,3 +104,6 @@ def avg_previous_num_games(df):
         for team in team_list:
             df[col].loc[df['awayTeam']==team] = df[col].loc[df['awayTeam']==team].expanding(1).mean()
     return df.dropna()
+
+if __name__ == "__main__":
+    trainAndExportModel()
