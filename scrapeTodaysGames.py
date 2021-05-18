@@ -8,14 +8,15 @@ import os
 import numpy as np
 from sportsreference.nba.teams import Teams
 from trainAndExportModel import MultiColumnLabelEncoder, avg_previous_num_games, format_nba_df
+import sys
 
+# Main Function
 def scrapeGamesAndOdds(Model):
     df = pd.read_csv(os.getcwd() + '/nbaScrapermodelData.csv')
     # format data
     df = format_nba_df(df)
     #do averaging thing i dont understand
     df = avg_previous_num_games(df)
-
     columnsT= np.array(df.columns.to_list())
     columnsT = columnsT[[1,2,3,4,5,6,7,8,9,10,11,12,15,16,14]]
     columnsT = columnsT.tolist()
@@ -37,7 +38,7 @@ def scrapeGamesAndOdds(Model):
     for game in range(len(source[0]['events'])):
         if source[0]['events'][game]['competitors']:
 
-            try:#For some reason this can be half moneyline
+            try: #For some reason this can be half moneyline
                 if '2H' in source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][0]['description']:
                     continue
 
@@ -136,11 +137,9 @@ class predictionFormatter:
         teams = Teams()
         for team in teams:
             self.teamNamesJson.append(team.name)
-            print(team.name)
         self.teamNamesJson.sort()
 
     def setEncodingIndex(self, teamString):
-        print(teamString)
         if teamString == "L.A. Clippers":
             teamString = "Los Angeles Clippers"
         return self.teamNamesJson.index(teamString)
@@ -152,3 +151,7 @@ def getImpliedProbability(line):
     else:
         prob = abs(line)/(abs(line) + 100)
         return prob
+
+if __name__ == "__main__":
+    Model = sys.argv[1]
+    scrapeGamesAndOdds(Model)

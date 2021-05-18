@@ -78,8 +78,6 @@ class MultiColumnLabelEncoder:
         return self.fit(X,y).transform(X)
 
 def format_nba_df(df):
-    print(df.columns)
-    print(df.head())
     df['homeWin'] = df['winningTeam'] == df['Home']
     df['homeTeam'] = np.where(df['homeWin']==True, df['winningTeam'], df['losingTeam'])
     ## create away team column
@@ -99,10 +97,10 @@ def avg_previous_num_games(df):
     team_list = df['homeTeam'].unique()
     for col in home_col:
         for team in team_list:
-            df[col].loc[df['homeTeam']==team] = df[col].loc[df['homeTeam']==team].expanding(1).mean()
+            df.loc[df['homeTeam']==team, col] = df[col].loc[df['homeTeam']==team].expanding(1).mean()
     for col in away_col:
         for team in team_list:
-            df[col].loc[df['awayTeam']==team] = df[col].loc[df['awayTeam']==team].expanding(1).mean()
+            df.loc[df['awayTeam']==team, col] = df[col].loc[df['awayTeam']==team].expanding(1).mean()
     return df.dropna()
 
 if __name__ == "__main__":

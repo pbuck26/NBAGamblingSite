@@ -50,7 +50,7 @@ def renderHomepage():
     # verify that the path to static png file works
     # arrange picks into one variable
     # move website html to index file
-    return render_template('websitetake2.html', games = games)
+    return render_template('websitetake2.html', games = games, user_verified = False)
 
 
 @app.route("/", methods=['POST', 'GET'])
@@ -62,7 +62,7 @@ def get_email():
         data = Users(email, password)
         db.session.add(data)
         db.session.commit()
-        return request.form['email']
+        return render_template('websitetake2.html', games = games, user_verified = True)
     else:
         app.logger.error('poopoo')
         
