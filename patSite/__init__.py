@@ -27,8 +27,12 @@ def create_app(test_config=None):
 
     from .scrapeTodaysGames import scrapeGamesAndOdds
 
-    Model = pickle.load(open(os.getcwd() + '/model.pkl','rb'))
-    games = scrapeGamesAndOdds(Model)
+    @app.before_first_request
+    def load_model():
+        Model = pickle.load('/model.pkl','rb'))
+        global games
+        games = scrapeGamesAndOdds(Model)
+
 
     @app.route("/")
     def renderHomepage():
