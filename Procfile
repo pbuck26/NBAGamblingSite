@@ -1,2 +1,2 @@
-web: gunicorn app:app
+web: gunicorn patSite:create_app
     
