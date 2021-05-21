@@ -19,7 +19,7 @@ def create_app(test_config=None):
 
     @app.before_first_request
     def load_model():
-        model = pickle.load('model.pkl','rb')
+        model = pickle.load(open('model.pkl','rb'))
         global games
         games = scrapeGamesAndOdds(model)
 
