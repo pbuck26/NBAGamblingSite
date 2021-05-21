@@ -1,2 +1,2 @@
-web: gunicorn patSite:create_app
+web: gunicorn wsgi.py:create_app
     
