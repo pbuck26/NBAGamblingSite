@@ -2,6 +2,9 @@ import os
 from flask import Flask, request, render_template, jsonify, Response
 import pickle
 import logging
+from flask_sqlalchemy import SQLAlchemy
+
+db=SQLAlchemy()
 
 def create_app(test_config=None):
     # create and configure the app
@@ -20,10 +23,9 @@ def create_app(test_config=None):
     except OSError:
         pass
     
-    from patSite import db
     db.init_app(app)
 
-    from patSite.scrapeTodaysGames import scrapeGamesAndOdds
+    from .scrapeTodaysGames import scrapeGamesAndOdds
 
     Model = pickle.load(open('model.pkl','rb'))
     games = scrapeGamesAndOdds(Model)
