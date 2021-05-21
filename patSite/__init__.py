@@ -1,6 +1,5 @@
 import os
 from flask import Flask, request, render_template, jsonify, Response
-import scrapeTodaysGames as sc
 import pickle
 import logging
 
@@ -24,8 +23,10 @@ def create_app(test_config=None):
     from patSite import db
     db.init_app(app)
 
+    from patSite.scrapeTodaysGames import scrapeGamesAndOdds
+
     Model = pickle.load(open('model.pkl','rb'))
-    games = sc.scrapeGamesAndOdds(Model)
+    games = scrapeGamesAndOdds(Model)
 
     @app.route("/")
     def renderHomepage():
