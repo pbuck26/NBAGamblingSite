@@ -1,8 +1,10 @@
 from flask import current_app as app
-from flask import request, render_template, jsonify, Response
+from flask import request, render_template, jsonify, Response, blueprints
 from .Models import Users, db
 
-@app.route("/")
+routes_blueprint = blueprints('routes_blueprint', __name__)
+
+@routes_blueprint.route("/")
 def renderHomepage():
     app.logger.info('homepage')
     # have to add a "pick" variable
@@ -11,7 +13,7 @@ def renderHomepage():
     # move website html to index file
     return render_template('websitetake2.html', games = games, user_verified = False)
 
-@app.route("/", methods=['POST', 'GET'])
+@routes_blueprint.route("/", methods=['POST', 'GET'])
 def get_email():
     app.logger.info('Email request endpoint')
     if "email" in request.form:
