@@ -16,6 +16,7 @@ def create_app(test_config=None):
     db.init_app(app)
     with app.app_context():
         from patSite.routes import routes_blueprint
+        app.register_blueprint(routes_blueprint)
         from patSite import Models
         Models.db.create_all()
     

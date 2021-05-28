@@ -1,8 +1,8 @@
 from flask import current_app as app
-from flask import request, render_template, jsonify, Response, blueprints
+from flask import request, render_template, jsonify, Response, Blueprint
 from .Models import Users, db
 
-routes_blueprint = blueprints('routes_blueprint', __name__)
+routes_blueprint = Blueprint('routes_blueprint', __name__)
 
 @routes_blueprint.route("/")
 def renderHomepage():
