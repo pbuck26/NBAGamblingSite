@@ -15,14 +15,16 @@ def create_app(test_config=None):
     
     db.init_app(app)
 
-    from .scrapeTodaysGames import scrapeGamesAndOdds
+    with app.app_context():
+        db.create_all()
+
+    from patSite.scrapeTodaysGames import scrapeGamesAndOdds
 
     @app.before_first_request
     def load_model():
         model = pickle.load(open('model.pkl','rb'))
         global games
         games = scrapeGamesAndOdds(model)
-
 
     @app.route("/")
     def renderHomepage():
@@ -45,6 +47,5 @@ def create_app(test_config=None):
             return render_template('websitetake2.html', games = games, user_verified = True)
         else:
             app.logger.error('poopoo')
-
 
     return app
