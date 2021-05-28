@@ -16,7 +16,7 @@ def create_app(test_config=None):
     db.init_app(app)
     with app.app_context():
         from patSite.routes import routes_blueprint
-        import patSite.Models
+        from patSite import Models
         Models.db.create_all()
     
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds
