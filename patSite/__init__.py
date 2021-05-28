@@ -3,7 +3,6 @@ from flask import Flask, request, render_template, jsonify, Response
 import pickle
 import logging
 from flask_sqlalchemy import SQLAlchemy
-from patSite import Models
 
 db=SQLAlchemy()
 
@@ -17,9 +16,7 @@ def create_app(test_config=None):
     db.init_app(app)
     with app.app_context():
         from . import routes
-        from . import Models
-        Models.db.create_all()
-
+    
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds
 
     @app.before_first_request
