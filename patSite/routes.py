@@ -1,6 +1,6 @@
 from flask import current_app as app
 from flask import request, render_template, jsonify, Response
-from .db import Users, db
+from .Models import Users, db
 
 @app.route("/")
 def renderHomepage():
