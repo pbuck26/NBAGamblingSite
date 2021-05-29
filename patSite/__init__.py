@@ -22,7 +22,7 @@ def create_app(test_config=None):
     
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds
 
-    @app.before_first_request
+    @app.before_request
     def load_model():
         model = pickle.load(open('model.pkl','rb'))
         g.games = scrapeGamesAndOdds(model)
