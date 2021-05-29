@@ -12,4 +12,4 @@ def renderHomepage():
     # verify that the path to static png file works
     # arrange picks into one variable
     # move website html to index file
-    return render_template('games.html', games = g.games)
+    return render_template('games.jinja2', games = g.games)
