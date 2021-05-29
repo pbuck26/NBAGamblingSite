@@ -6,7 +6,6 @@ from flask_login import current_user, logout_user, login_required
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
 @routes_blueprint.route("/")
-@login_required
 def renderHomepage():
     app.logger.info('homepage')
     # have to add a "pick" variable
