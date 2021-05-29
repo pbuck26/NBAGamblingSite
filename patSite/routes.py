@@ -1,7 +1,6 @@
 from flask import current_app as app
-from flask import request, render_template, jsonify, Response, Blueprint
+from flask import request, render_template, jsonify, Response, Blueprint, g
 from .Models import Users, db
-from patSite import games
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
@@ -12,7 +11,7 @@ def renderHomepage():
     # verify that the path to static png file works
     # arrange picks into one variable
     # move website html to index file
-    return render_template('websitetake2.html', games = games, user_verified = False)
+    return render_template('websitetake2.html', games = g.games, user_verified = False)
 
 @routes_blueprint.route("/", methods=['POST', 'GET'])
 def get_email():
@@ -23,6 +22,6 @@ def get_email():
         data = Users(email, password)
         db.session.add(data)
         db.session.commit()
-        return render_template('websitetake2.html', games = games, user_verified = True)
+        return render_template('websitetake2.html', games = g.games, user_verified = True)
     else:
         app.logger.error('poopoo')

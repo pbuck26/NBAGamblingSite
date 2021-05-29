@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, render_template, jsonify, Response
+from flask import Flask, request, render_template, jsonify, Response, g
 import pickle
 import logging
 from flask_sqlalchemy import SQLAlchemy
@@ -25,7 +25,6 @@ def create_app(test_config=None):
     @app.before_first_request
     def load_model():
         model = pickle.load(open('model.pkl','rb'))
-        global games
-        games = scrapeGamesAndOdds(model)
+        g.games = scrapeGamesAndOdds(model)
 
     return app
