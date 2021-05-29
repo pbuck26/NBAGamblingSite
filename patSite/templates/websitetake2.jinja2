@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PatSite</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+  <div class="p-3 mb-2 bg-dark text-white">.bg-dark</div>
+  <nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+      <div style="background-color:black" class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>                        
+        </button>
+      </div>
+      <div class="login-signup">
+        <div>
+          <span>Already have an account?</span>
+          <a href="{{ url_for('auth_bp.login') }}">Log in.</a>
+        </div>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="{{ url_for('routes_bp.renderHomepage') }}">HOME</a></li>
+          <li><a href="{{ url_for('auth_bp.login') }}">SIGN UP</a></li>
+          <li><a href="#Contact">CONTACT</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="jumbotron text-center">
+    <h1>Pat's Gambling Site</h1>
+    <p>Picks are based off of gaussian regression machine learning model</p> 
+  </div>
+
+  {% block content %}{% endblock %}
+
+</body>
+</html>
