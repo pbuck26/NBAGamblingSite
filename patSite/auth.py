@@ -12,13 +12,13 @@ static_folder ='static')
 def login():
     form = LoginForm()
     if current_user.is_authenticated:
-        return redirect(url_for('route_bp.renderHomepage'))
+        return redirect(url_for('routes_blueprint.renderHomepage'))
     if form.validate_on_submit:
         user = Users.query.filter_by(email=form.email.data).first()
         if user and user.check_password(password=form.password.data):
             login_user(user)
             next_page = request.args.get('next')
-            return redirect(next_page or url_for('routes_bp.renderHomepage'))
+            return redirect(next_page or url_for('routes_blueprint.renderHomepage'))
         flash('Invalid username/password combination')
         return redirect(url_for('auth_bp.login'))
     return render_template('login.jinja2', 
@@ -38,7 +38,7 @@ def signup():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            return redirect(url_for('routes_bp.renderHomepage'))
+            return redirect(url_for('routes_blueprint.renderHomepage'))
         flash('A user with already exists with that email address')
     return render_template('signup.jinja2', 
     title='Create an account.',

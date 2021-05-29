@@ -7,7 +7,7 @@ import pandas as pd
 import os
 import numpy as np
 from sportsreference.nba.teams import Teams
-from .trainAndExportModel import MultiColumnLabelEncoder, avg_previous_num_games, format_nba_df
+from patSite.trainAndExportModel import MultiColumnLabelEncoder, avg_previous_num_games, format_nba_df
 import sys
 
 # Main Function
