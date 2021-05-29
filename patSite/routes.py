@@ -1,6 +1,7 @@
 from flask import current_app as app
 from flask import request, render_template, jsonify, Response, Blueprint
 from .Models import Users, db
+from patSite import games
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
