@@ -22,7 +22,8 @@ def create_app(test_config=None):
         from patSite.routes import routes_blueprint
         app.register_blueprint(routes_blueprint)
         from patSite import Models
-        from patSite import auth
+        from patSite.auth import auth_bp
+        app.register_blueprint(auth_bp)
         Models.db.create_all()
     
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds

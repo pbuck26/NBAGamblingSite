@@ -7,6 +7,8 @@ click==7.1.2
 constantly==15.1.0
 cryptography==3.3.1
 cssselect==1.1.0
+dnspython==2.1.0
+email-validator==1.1.2
 Flask==1.1.2
 Flask-Login==0.5.0
 Flask-SQLAlchemy==2.5.1
