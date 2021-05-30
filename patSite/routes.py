@@ -2,12 +2,13 @@ from flask import current_app as app
 from flask import request, render_template, jsonify, Response, Blueprint, g
 from patSite.Models import Users, db
 from flask_login import current_user, logout_user, login_required
+from flask import current_app as app
 
 routes_blueprint = Blueprint('routes_blueprint', __name__)
 
 @routes_blueprint.route("/")
 def renderHomepage():
-    app.logger.info('homepage')
+    app.logger.info("Rendering homepage...")
     # have to add a "pick" variable
     # verify that the path to static png file works
     # arrange picks into one variable

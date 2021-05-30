@@ -14,7 +14,7 @@ def create_app(test_config=None):
 
     # load the instance config, if it exists, when not testing
     app.config.from_object("config.Config")
-    
+    app.logger.info("Creating application")
     db.init_app(app)
     login_manager.init_app(app)
 

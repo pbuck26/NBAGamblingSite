@@ -33,7 +33,7 @@ def scrapeGamesAndOdds(Model):
     predictionFaith = []
     games           = []
     gameIndex = 0
-    print(f'{date.today()} games:\n')
+    #print(f'{date.today()} games:\n')
     #main event loop
     for game in range(len(source[0]['events'])):
         if source[0]['events'][game]['competitors']:
@@ -57,8 +57,8 @@ def scrapeGamesAndOdds(Model):
                 homeTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][homeIndex]['description'])
                 awayOdds.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['price']['american'])
                 awayTeam.append(source[0]['events'][game]['displayGroups'][0]['markets'][0]['outcomes'][awayIndex]['description'])
-                print("######################################################")
-                print(f'{homeTeam[-1]} ({homeOdds[-1]}) vs {awayTeam[-1]} ({awayOdds[-1]})')
+                #print("######################################################")
+                #print(f'{homeTeam[-1]} ({homeOdds[-1]}) vs {awayTeam[-1]} ({awayOdds[-1]})')
                 beans = getTeamData4Model(df, homeTeam[-1], awayTeam[-1])
                 #prediction = Model.predict(beans)
                 predictionAcc = Model.predict_proba(beans)
