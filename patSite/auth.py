@@ -9,6 +9,15 @@ auth_bp = Blueprint('auth_bp', __name__,
 template_folder='templates',
 static_folder ='static')
 
+@auth_bp.route('/login')
+def login_page():
+    form=LoginForm()
+    render_template('login.jinja2', 
+    title='Log In',
+    form=form,
+    template='login-page',
+    body ="Log in with your user account")
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     print("poopy")
