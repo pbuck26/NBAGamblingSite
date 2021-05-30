@@ -4,7 +4,6 @@ import pickle
 import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from patSite import commands
 
 db=SQLAlchemy()
 login_manager = LoginManager()
@@ -17,7 +16,6 @@ def create_app(test_config=None):
     app.config.from_object("config.Config")
     app.logger.info("Creating application")
     db.init_app(app)
-    commands.init_app(app)
     login_manager.init_app(app)
 
     with app.app_context():
@@ -25,7 +23,9 @@ def create_app(test_config=None):
         app.register_blueprint(routes_blueprint)
         from patSite import Models
         from patSite.auth import auth_bp
+        from patSite.commands import commands_bp
         app.register_blueprint(auth_bp)
+        app.register_blueprint(commands_bp)
         Models.db.create_all()
     
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds
