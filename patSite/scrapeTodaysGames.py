@@ -115,8 +115,9 @@ def scrapeGamesAndOdds(Model):
                 continue
     db=SQLAlchemy()
     from patSite.Models import Picks
-    picks_final = Picks(**games)
-    db.session.add(picks_final)
+    for game in games:
+        picks_final = Picks(**game)
+        db.session.add(picks_final)
     db.session.commit()
 
 def getTeamData4Model(df, homeTeam, awayTeam):
