@@ -37,10 +37,10 @@ def signup():
     app.logger.info("Rendering signup page")
     form = SignupForm()
     if form.validate_on_submit():
-        existing_user = Users.query.filter(email=form.email.data).first()
+        existing_user = Users.query.filter_by(email=form.email.data).first()
         if existing_user is None:
-            user = Users(form.name.data, form.email.data)
             user.set_password(form.password.data)
+            user = Users(form.name.data, form.email.data, form.password.data)
             db.session.add(user)
             db.session.commit()
             login_user(user)

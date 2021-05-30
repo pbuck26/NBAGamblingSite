@@ -1,4 +1,5 @@
 # will have to make this its own function at some point
+from flask_sqlalchemy import SQLAlchemy
 import requests
 from datetime import date
 import sklearn
@@ -9,6 +10,7 @@ import numpy as np
 from sportsreference.nba.teams import Teams
 from patSite.trainAndExportModel import MultiColumnLabelEncoder, avg_previous_num_games, format_nba_df
 import sys
+from flask_sqlalchemy import SQLAlchemy
 
 # Main Function
 def scrapeGamesAndOdds(Model):
@@ -111,7 +113,11 @@ def scrapeGamesAndOdds(Model):
 
             else:
                 continue
-    return games
+    db=SQLAlchemy()
+    from patSite.Models import Picks
+    picks_final = Picks(**games)
+    db.session.add(picks_final)
+    db.session.commit()
 
 def getTeamData4Model(df, homeTeam, awayTeam):
     #find matching team
