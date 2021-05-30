@@ -100,6 +100,7 @@ def scrapeGamesAndOdds(Model):
                 pick = pick.replace(" ", "%20")
                 gameT = {
                 "homeOdds"    :homeOdds[-1],
+                "awayOdds"    :awayOdds[-1]
                 "homeTeam"    :f"/static/{homeTeam[-1]}.png",
                 "awayTeam"    :f"/static/{awayTeam[-1]}.png",
                 "pick"        :f"/static/{pick}.png",
@@ -113,7 +114,6 @@ def scrapeGamesAndOdds(Model):
 
             else:
                 continue
-    db=SQLAlchemy()
     from patSite.Models import Picks
     for game in games:
         picks_final = Picks(**game)
