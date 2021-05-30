@@ -24,7 +24,6 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('routes_blueprint.renderHomepage'))
         flash('Invalid username/password combination')
-        print("poopypoo")
         return redirect(url_for('auth_bp.login'))
     return render_template('login.jinja2', 
     title='Log In',
