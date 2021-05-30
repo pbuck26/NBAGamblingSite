@@ -116,7 +116,8 @@ def scrapeGamesAndOdds(Model):
                 continue
     from patSite.Models import Picks, db
     for game in games:
-        picks_final = Picks(**game)
+        picks_final = Picks(int(game.get("homeOdds")), int(game.get("awayOdds")), game.get("homeTeam"), 
+        game.get("awayTeam"), game.get("pick"), float(game.get("prob")), float(game.get("vegas_prob")))
         db.session.add(picks_final)
     db.session.commit()
 

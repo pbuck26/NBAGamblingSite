@@ -37,8 +37,8 @@ class Picks(db.Model):
     awayTeam    = db.Column(db.String(200), nullable=False)
     date        = db.Column(db.DateTime, nullable=False)
     pick        = db.Column(db.String(200), nullable=False)
-    prob        = db.Column(db.String(200), nullable=False)
-    vegas_prob  = db.Column(db.String(200), nullable=False)
+    prob        = db.Column(db.Float, nullable=False)
+    vegas_prob  = db.Column(db.Float, nullable=False)
     correctPick = db.Column(db.Boolean, nullable=True)
 
     def __init__(self, homeOdds, awayOdds, homeTeam, awayTeam, pick, prob, vegas_prob):
