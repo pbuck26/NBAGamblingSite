@@ -4,6 +4,7 @@ import pickle
 import logging
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from patSite import commands
 
 db=SQLAlchemy()
 login_manager = LoginManager()
@@ -16,6 +17,7 @@ def create_app(test_config=None):
     app.config.from_object("config.Config")
     app.logger.info("Creating application")
     db.init_app(app)
+    commands.init_app(app)
     login_manager.init_app(app)
 
     with app.app_context():
