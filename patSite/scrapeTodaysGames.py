@@ -114,7 +114,7 @@ def scrapeGamesAndOdds(Model):
 
             else:
                 continue
-    from patSite.Models import Picks
+    from patSite.Models import Picks, db
     for game in games:
         picks_final = Picks(**game)
         db.session.add(picks_final)
