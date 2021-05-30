@@ -16,7 +16,7 @@ def login():
     if current_user.is_authenticated:
         print("current_user.is_authenticated: {}".format(current_user.is_authenticated))
         return redirect(url_for('routes_blueprint.renderHomepage'))
-    if form.validate_on_submit:
+    if form.validate_on_submit():
         app.logger.info("Valid Form response")
         user = Users.query.filter_by(email=form.email.data).first()
         if user and user.check_password(password=form.password.data):
