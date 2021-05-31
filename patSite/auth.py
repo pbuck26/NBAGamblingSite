@@ -39,11 +39,11 @@ def signup():
     if form.validate_on_submit():
         existing_user = Users.query.filter_by(email=form.email.data).first()
         if existing_user is None:
-            user.set_password(form.password.data)
-            user = Users(form.name.data, form.email.data, form.password.data)
-            db.session.add(user)
+            new_user = Users(form.name.data, form.email.data, form.password.data)
+            new_user.set_password(form.password.data)
+            db.session.add(new_user)
             db.session.commit()
-            login_user(user)
+            login_user(new_user)
             return redirect(url_for('routes_blueprint.renderHomepage'))
         flash('A user with already exists with that email address')
     return render_template('signup.jinja2', 

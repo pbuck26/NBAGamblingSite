@@ -22,4 +22,3 @@ def create_model_table():
     from patSite.scrapeTodaysGames import scrapeGamesAndOdds
     model = pickle.load(open('model.pkl','rb'))
     scrapeGamesAndOdds(model)
-    Picks.__table__.create(db.engine)

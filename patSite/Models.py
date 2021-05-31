@@ -46,7 +46,7 @@ class Picks(db.Model):
         self.awayOdds       = awayOdds
         self.homeTeam       = homeTeam
         self.awayTeam       = awayTeam
-        self.date           = dt.now()
+        self.date           = dt.now().date()
         self.pick           = pick
         self.prob           = prob
         self.vegas_prob     = pick
