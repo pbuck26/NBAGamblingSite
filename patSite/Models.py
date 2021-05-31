@@ -31,8 +31,8 @@ class Users(UserMixin, db.Model):
 class Picks(db.Model):
     __tablename__='picks'
     id          = db.Column(db.Integer, primary_key=True)
-    homeOdds    = db.Column(db.Integer, nullable=False)
-    awayOdds    = db.Column(db.Integer, nullable=False)
+    homeOdds    = db.Column(db.String(200), nullable=False)
+    awayOdds    = db.Column(db.String(200), nullable=False)
     homeTeam    = db.Column(db.String(200), nullable=False)
     awayTeam    = db.Column(db.String(200), nullable=False)
     date        = db.Column(db.DateTime, nullable=False)

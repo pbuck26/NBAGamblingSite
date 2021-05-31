@@ -27,12 +27,5 @@ def create_app(test_config=None):
         app.register_blueprint(auth_bp)
         app.register_blueprint(commands_bp)
         Models.db.create_all()
-    
-    from patSite.scrapeTodaysGames import scrapeGamesAndOdds
-
-    #@app.before_request
-    #def load_model():
-     #   model = pickle.load(open('model.pkl','rb'))
-      #  g.games = scrapeGamesAndOdds(model)
 
     return app
