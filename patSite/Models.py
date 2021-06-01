@@ -12,7 +12,7 @@ class Users(UserMixin, db.Model):
     password   = db.Column(db.String(200), nullable=False)
     created_on = db.Column(db.DateTime, nullable=True)
     last_login = db.Column(db.DateTime, nullable=True)
-    messages   = db.relationship('contactmessages', backref='users', lazy=True)
+    messages   = db.relationship('ContactMessages', backref='users', lazy=True)
 
     def __init__(self, email, password, name):
         self.email      = email
