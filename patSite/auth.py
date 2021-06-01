@@ -22,6 +22,7 @@ def login():
         if user and user.check_password(password=form.password.data):
             login_user(user)
             next_page = request.args.get('next')
+            flash('Successfully Logged In!')
             return redirect(next_page or url_for('routes_blueprint.renderHomepage'))
         flash('Invalid username/password combination')
         return redirect(url_for('auth_bp.login'))
@@ -39,11 +40,12 @@ def signup():
     if form.validate_on_submit():
         existing_user = Users.query.filter_by(email=form.email.data).first()
         if existing_user is None:
-            new_user = Users(form.name.data, form.email.data, form.password.data)
+            new_user = Users(form.email.data,form.password.data, form.name.data)
             new_user.set_password(form.password.data)
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user)
+            flash('Successfully Logged In!')
             return redirect(url_for('routes_blueprint.renderHomepage'))
         flash('A user with already exists with that email address')
     return render_template('signup.jinja2', 

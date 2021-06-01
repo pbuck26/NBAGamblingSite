@@ -1,3 +1,4 @@
+from sqlalchemy.orm import backref
 from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,6 +12,7 @@ class Users(UserMixin, db.Model):
     password   = db.Column(db.String(200), nullable=False)
     created_on = db.Column(db.DateTime, nullable=True)
     last_login = db.Column(db.DateTime, nullable=True)
+    messages   = db.relationship('contactmessages', backref='users', lazy=True)
 
     def __init__(self, email, password, name):
         self.email      = email
@@ -50,3 +52,18 @@ class Picks(db.Model):
         self.pick           = pick
         self.prob           = prob
         self.vegas_prob     = pick
+
+
+class ContactMessages(db.Model):
+    __tablename__='contactmessages'
+    id          = db.Column(db.Integer, primary_key=True)
+    subject     = db.Column(db.Text, nullable=False)
+    message     = db.Column(db.Text, nullable=False)
+    date        = db.Column(db.DateTime, nullable=False)
+    user_id     = db.Column(db.Integer, db.ForiegnKey('users.id'), nullable=False)
+
+    def __init__(self, subject, message, user_id):
+        self.subject       = subject
+        self.message       = message
+        self.date          = dt.now().date()
+        self.user_id       = user_id
