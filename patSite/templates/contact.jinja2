@@ -28,18 +28,7 @@
           </ul>
         {% endif %}
       </fieldset>
-
-      <fieldset class="confirm">
-        {{ form.confirm.label }}
-        {{ form.confirm }}
-        {% if form.confirm.errors %}
-          <ul class="errors">
-            {% for error in form.confirm.errors %}
-              <li>{{ error }}</li>{% endfor %}
-          </ul>
-        {% endif %}
-      </fieldset>
-
+      
       <div class="submit-button">
         {{ form.submit }}
       </div>

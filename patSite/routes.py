@@ -36,3 +36,9 @@ def contactPage():
     template='contact-page',
     body ="Contact Me!")
 
+@routes_blueprint.route("/logout")
+def logout():
+    flash(f"Goodbye {current_user.name}")
+    logout_user()
+    return redirect(url_for('routes_blueprint.renderHomepage'))
+

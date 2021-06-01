@@ -26,7 +26,7 @@
           <li><a href="{{ url_for('auth_bp.signup') }}">SIGN UP</a></li>
           <li><a href="{{ url_for('auth_bp.login') }}">LOG IN</a></li>
           {% else %}
-          <li><a href="{{ url_for('routes_blueprint.logout') }}">LOG OUT</a></li>
+          <li role="presentation" class="active"><a href="{{ url_for('routes_blueprint.logout') }}">LOG OUT</a></li>
           {% endif %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('routes_blueprint.contactPage') }}">CONTACT</a></li>
         </ul>
