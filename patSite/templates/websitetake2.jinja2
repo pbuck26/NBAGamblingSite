@@ -22,8 +22,13 @@
       <div class="collapse navbar-collapse" id="myNavbar">
         <ul class="nav navbar-nav navbar-right">
           <li><a href="{{ url_for('routes_blueprint.renderHomepage') }}">HOME</a></li>
+          {% if current_user.is_anonymous %}
           <li><a href="{{ url_for('auth_bp.signup') }}">SIGN UP</a></li>
-          <li><a href="#Contact">CONTACT</a></li>
+          <li><a href="{{ url_for('auth_bp.login') }}">LOG IN</a></li>
+          {% else %}
+          <li><a href="{{ url_for('routes_blueprint.logout') }}">LOG OUT</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('routes_blueprint.contactPage') }}">CONTACT</a></li>
         </ul>
       </div>
     </div>
@@ -33,6 +38,18 @@
     <h1>Pat's Gambling Site</h1>
     <p>Picks are based off of gaussian regression machine learning model</p> 
   </div>
+
+    {% for message in get_flashed_messages() %}
+      <div class="alert alert-warning">
+        <button
+          type="button"
+          class="close"
+          data-dismiss="alert">
+          x
+        </button>
+        {{ message }}
+      </div>
+    {% endfor %}
 
   {% block content %}{% endblock %}
 

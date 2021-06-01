@@ -45,7 +45,7 @@ def signup():
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user)
-            flash('Successfully Logged In!')
+            flash(f"Welcome back {current_user.name}!")
             return redirect(url_for('routes_blueprint.renderHomepage'))
         flash('A user with already exists with that email address')
     return render_template('signup.jinja2', 
