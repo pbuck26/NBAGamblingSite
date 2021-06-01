@@ -18,7 +18,7 @@ def renderHomepage():
     games = Picks.query.filter(cast(Picks.date, Date)==datetime.date.today()).all()
     return render_template('games.jinja2', games = games)
 
-@routes_blueprint("/contact", methods=['GET', 'POST'])
+@routes_blueprint.route("/contact", methods=['GET', 'POST'])
 @login_required
 def contactPage():
     app.logger.info("Rendering contact page...")
