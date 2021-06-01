@@ -60,7 +60,7 @@ class ContactMessages(db.Model):
     subject     = db.Column(db.Text, nullable=False)
     message     = db.Column(db.Text, nullable=False)
     date        = db.Column(db.DateTime, nullable=False)
-    user_id     = db.Column(db.Integer, db.ForiegnKey('users.id'), nullable=False)
+    user_id     = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __init__(self, subject, message, user_id):
         self.subject       = subject
