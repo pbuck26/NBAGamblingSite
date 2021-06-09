@@ -1,13 +1,16 @@
 {% extends "websitetake2.jinja2" %}
+{% block styling %} 
+<link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
+{% endblock %}
 
 {% block content %}
-  <div class="form-wrapper">
-    <h1>Log In</h1>
+  <div class="box">
+    <h2>Log In</h2>
 
     <form method="POST" action="/login">
       {{ form.csrf_token }}
 
-      <fieldset class="email">
+      <fieldset class="inputBox">
         {{ form.email.label }}
         {{ form.email(placeholder='youremail@example.com') }}
         {% if form.email.errors %}
@@ -18,7 +21,7 @@
         {% endif %}
       </fieldset>
 
-      <fieldset class="password">
+      <fieldset class="inputBox">
         {{ form.password.label }}
         {{ form.password }}
         {% if form.email.errors %}
@@ -29,7 +32,7 @@
         {% endif %}
       </fieldset>
 
-      <div class="submit-button">
+      <div class="submit">
         {{ form.submit }}
       </div>
 
@@ -43,3 +46,5 @@
 
 
 {% endblock %}
+
+  
