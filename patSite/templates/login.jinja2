@@ -1,7 +1,21 @@
 {% extends "websitetake2.jinja2" %}
+
 {% block styling %} 
 <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
 {% endblock %}
+
+{% macro render_field(field) %}
+  {{ field(**kwargs)|safe }}
+  {% if field.errors %}
+    <ul class=errors>
+    {% for error in field.errors %}
+      <li>{{ error }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  {{ field.label }}
+{% endmacro %}
+
 
 {% block content %}
   <div class="box">
@@ -9,27 +23,12 @@
 
     <form method="POST" action="/login">
       {{ form.csrf_token }}
-
       <fieldset class="inputBox">
-        {{ form.email.label }}
-        {{ form.email(placeholder='youremail@example.com') }}
-        {% if form.email.errors %}
-          <ul class="errors">
-            {% for error in form.email.errors %}
-              <li>{{ error }}</li>{% endfor %}
-          </ul>
-        {% endif %}
+        {{ render_field(form.email, onkeyup="this.setAttribute('value', this.value);",  value="") }}
       </fieldset>
 
       <fieldset class="inputBox">
-        {{ form.password.label }}
-        {{ form.password }}
-        {% if form.email.errors %}
-          <ul class="errors">
-            {% for error in form.password.errors %}
-              <li>{{ error }}</li>{% endfor %}
-          </ul>
-        {% endif %}
+        {{ render_field(form.password, required=true, onkeyup="this.setAttribute('value', this.value);",  value="") }}
       </fieldset>
 
       <div class="submit">
