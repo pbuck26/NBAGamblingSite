@@ -11,7 +11,7 @@ from sportsreference.nba.teams import Teams
 from patSite.trainAndExportModel import MultiColumnLabelEncoder, avg_previous_num_games, format_nba_df
 import sys
 from flask_sqlalchemy import SQLAlchemy
-
+    
 # Main Function
 def scrapeGamesAndOdds(Model):
     df = pd.read_csv(os.getcwd() + '/nbaScrapermodelData.csv')
@@ -35,7 +35,6 @@ def scrapeGamesAndOdds(Model):
     predictionFaith = []
     games           = []
     gameIndex = 0
-    #print(f'{date.today()} games:\n')
     #main event loop
     for game in range(len(source[0]['events'])):
         if source[0]['events'][game]['competitors']:
