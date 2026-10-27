@@ -2,7 +2,7 @@
 from statistics import mean
 
 FEATURE_LABELS = {
-    "home_court": "Home court",
+    "home_court": "Home court (adjusts the home bonus already in the Elo gap)",
     "elo_diff": "Elo rating gap (per 100 pts)",
     "form_diff": "Last-10-games margin gap (per 10 pts)",
     "season_margin_diff": "Season scoring margin gap (per 10 pts)",

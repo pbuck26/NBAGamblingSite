@@ -25,6 +25,10 @@ jobs:
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-pipeline.txt
+      - name: Check where the feed puts odds
+        run: |
+          python -m patSite.pipeline.espn 2026-03-15 --raw | head -120
+          python -m patSite.pipeline.espn --raw | head -120
       - name: Fetch games
         run: flask --app wsgi sync-games
       - name: Backtest

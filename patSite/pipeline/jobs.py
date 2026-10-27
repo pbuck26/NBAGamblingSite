@@ -40,6 +40,10 @@ def sync_games(start=None, end=None, fetch=espn.fetch_scoreboard, pause=0.2):
         day += timedelta(days=1)
         if pause:
             time.sleep(pause)
+    for label, done in (("finished", True), ("upcoming", False)):
+        synced = Game.query.filter(Game.completed.is_(done), Game.game_date >= start)
+        priced = synced.filter(Game.home_ml.isnot(None)).count()
+        log.info("%d of %d %s games since %s have moneylines", priced, synced.count(), label, start)
     return count
 
 

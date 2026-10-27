@@ -3,6 +3,7 @@
 The feed is unofficial and undocumented, so parsing is defensive: anything
 unexpected is skipped and logged rather than guessed at.
 """
+import json
 import logging
 import sys
 import time
@@ -17,6 +18,7 @@ from patSite.teams import canonical_team
 log = logging.getLogger(__name__)
 
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary"
 PRESEASON = 1
 ATTEMPTS = 4
 
@@ -140,9 +142,33 @@ def _season_for(start):
     return start.year + 1 if start.month >= 8 else start.year
 
 
+def _show_raw_odds(data):
+    """Print where odds appear in the feed for the first game, to debug parse_moneylines."""
+    events = data.get("events") or []
+    if not events:
+        print("No events on this date.")
+        return
+    event = events[0]
+    comp = (event.get("competitions") or [{}])[0]
+    print(f"{event.get('name')}: scoreboard competitions[0].odds =")
+    print(json.dumps(comp.get("odds"), indent=1)[:2500])
+    resp = requests.get(SUMMARY_URL, params={"event": event["id"]}, timeout=30,
+                        headers={"User-Agent": "nbagamblingsite/1.0"})
+    summary = resp.json() if resp.ok else {}
+    print(f"summary endpoint keys: {sorted(summary)}")
+    for key in ("pickcenter", "odds"):
+        if summary.get(key):
+            print(f"summary[{key!r}][0] =")
+            print(json.dumps(summary[key][0], indent=1)[:2500])
+
+
 if __name__ == "__main__":
-    # Debug helper: python -m patSite.pipeline.espn 2026-01-15
+    # Debug helper: python -m patSite.pipeline.espn 2026-01-15 [--raw]
     logging.basicConfig(level=logging.INFO)
-    day = date.fromisoformat(sys.argv[1]) if len(sys.argv) > 1 else date.today()
-    for g in parse_scoreboard(fetch_scoreboard(day)):
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    day = date.fromisoformat(args[0]) if args else datetime.now(ET).date()
+    data = fetch_scoreboard(day)
+    if "--raw" in sys.argv:
+        _show_raw_odds(data)
+    for g in parse_scoreboard(data):
         print(g)
