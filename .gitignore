@@ -1,0 +1,14 @@
+# Secrets: never commit real values. Copy .env.example to .env instead.
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local databases and generated files
+*.db
+*.sqlite3
+instance/
