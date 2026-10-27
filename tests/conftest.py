@@ -1,3 +1,4 @@
+import os
 from datetime import date, datetime
 
 import pytest
@@ -12,7 +13,8 @@ def app(tmp_path):
         "TESTING": True,
         "SECRET_KEY": "test",
         "WTF_CSRF_ENABLED": False,
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{tmp_path / 'test.db'}",
+        # CI also runs the suite against Postgres, which production uses.
+        "SQLALCHEMY_DATABASE_URI": os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{tmp_path / 'test.db'}",
     })
     with app.app_context():
         db.create_all()
