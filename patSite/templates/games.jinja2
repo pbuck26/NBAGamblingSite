@@ -1,32 +1,109 @@
 {% extends "base.jinja2" %}
+{% from "_teams.jinja2" import logo, result_badge %}
+
+{% macro status(game) %}{% if game.completed %}Final{% elif game.state == 'in' %}Live{% else %}{{ game.start_time|et_time }}{% endif %}{% endmacro %}
+
+{% macro bet_text(p) %}
+  {% if p.bet_side %}
+    {{ p.bet_team }} {{ p.bet_odds|american }}
+    <div class="small text-body-secondary">
+      {% if p.profit is not none %}{{ p.profit|units }}{% else %}{{ p.bet_ev|pct(1) }} expected return{% endif %}
+    </div>
+  {% else %}
+    <span class="text-body-secondary">No bet</span>
+  {% endif %}
+{% endmacro %}
 
 {% block content %}
-<h2 class="h4">Today's slate</h2>
-<p class="text-body-secondary">Model picks for today's games.</p>
-<div class="table-responsive">
-  <table class="table table-hover align-middle text-center">
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
+  <h1 class="h3 mb-0">{% if slate_date and slate_date != today %}Next picks{% else %}Today's picks{% endif %}</h1>
+  {% if slate_date %}<span class="text-body-secondary">{{ slate_date|long_date }}</span>{% endif %}
+</div>
+<p class="text-body-secondary mb-4">
+  Win probabilities come from a model trained only on 2026 games, using Elo ratings, recent form, rest and back-to-backs.
+  A <strong>value bet</strong> is flagged when the model's estimate, combined with the market's, expects at least a 3% return at the listed odds.
+  <a href="{{ url_for('routes_blueprint.performance') }}">See how the model has done.</a>
+</p>
+
+{% if games %}
+{# Phones: one card per game. #}
+<div class="d-md-none">
+  {% for game in games %}
+  {% set p = game.prediction %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center small text-body-secondary mb-2">
+        <span>{{ status(game) }}{% if not game.completed and game.state != 'in' %} ET{% endif %}</span>
+        {{ result_badge(p) }}
+      </div>
+      {% for team, ml, score, prefix in [(game.away_team, p.away_ml, game.away_score, ''), (game.home_team, p.home_ml, game.home_score, '@ ')] %}
+      <div class="d-flex align-items-center gap-2{% if not loop.first %} mt-1{% endif %}">
+        {{ logo(team) }}<span>{{ prefix }}{{ team }}</span>
+        <span class="ms-auto numbers-inline">{% if game.completed %}<strong>{{ score }}</strong>{% else %}{{ ml|american }}{% endif %}</span>
+      </div>
+      {% endfor %}
+      <hr class="my-2">
+      <div class="small">
+        <span class="text-body-secondary">Pick:</span> <strong>{{ p.pick }}</strong>
+        · model {{ p.pick_prob|pct }} · market {{ p.market_pick_prob|pct }}
+      </div>
+      <div class="small mt-1"><span class="text-body-secondary">Value bet:</span> {{ bet_text(p) }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{# Larger screens: table. #}
+<div class="table-responsive d-none d-md-block">
+  <table class="table align-middle numbers">
     <thead>
       <tr>
-        <th>Home</th>
-        <th>Away</th>
-        <th>Home moneyline</th>
-        <th>Pick</th>
-        <th>Home win prob</th>
+        <th scope="col">Time (ET)</th>
+        <th scope="col">Matchup</th>
+        <th scope="col" class="text-end">Moneyline</th>
+        <th scope="col">Model pick</th>
+        <th scope="col" class="text-end">Model</th>
+        <th scope="col" class="text-end">Market</th>
+        <th scope="col">Value bet</th>
       </tr>
     </thead>
     <tbody>
       {% for game in games %}
+      {% set p = game.prediction %}
       <tr>
-        <td><img class="team-logo" src="{{ game.homeTeam }}" alt="Home team"></td>
-        <td><img class="team-logo" src="{{ game.awayTeam }}" alt="Away team"></td>
-        <td>{{ game.homeOdds }}</td>
-        <td><img class="team-logo" src="{{ game.pick }}" alt="Picked team"></td>
-        <td>{{ game.prob }}</td>
+        <td class="text-nowrap">{{ status(game) }}</td>
+        <td class="text-nowrap">
+          <div class="d-flex align-items-center gap-2">
+            {{ logo(game.away_team) }}<span>{{ game.away_team }}</span>
+            {% if game.completed %}<span class="ms-auto ps-3 fw-semibold">{{ game.away_score }}</span>{% endif %}
+          </div>
+          <div class="d-flex align-items-center gap-2 mt-1">
+            {{ logo(game.home_team) }}<span>@ {{ game.home_team }}</span>
+            {% if game.completed %}<span class="ms-auto ps-3 fw-semibold">{{ game.home_score }}</span>{% endif %}
+          </div>
+        </td>
+        <td class="text-end text-nowrap">
+          <div>{{ p.away_ml|american }}</div>
+          <div class="mt-1">{{ p.home_ml|american }}</div>
+        </td>
+        <td class="text-nowrap">
+          <div class="d-flex align-items-center gap-2">{{ logo(p.pick) }}<span>{{ p.pick }}</span></div>
+          {{ result_badge(p) }}
+        </td>
+        <td class="text-end">{{ p.pick_prob|pct }}</td>
+        <td class="text-end">{{ p.market_pick_prob|pct }}</td>
+        <td class="text-nowrap">{{ bet_text(p) }}</td>
       </tr>
-      {% else %}
-      <tr><td colspan="5" class="text-body-secondary">No picks yet for today.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+<p class="small text-body-secondary">
+  Model and Market show the picked team's chance of winning. The market figure is the bookmaker's line with its margin removed.
+</p>
+{% else %}
+<div class="alert alert-secondary">
+  No picks posted yet. Picks go up each day once the schedule and odds are available.
+</div>
+{% endif %}
 {% endblock %}

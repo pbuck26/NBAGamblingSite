@@ -17,6 +17,7 @@
       <div class="collapse navbar-collapse" id="mainNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="{{ url_for('routes_blueprint.renderHomepage') }}">Today's picks</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('routes_blueprint.performance') }}">Performance</a></li>
           <li class="nav-item"><a class="nav-link" href="{{ url_for('routes_blueprint.contactPage') }}">Contact</a></li>
           {% if current_user.is_anonymous %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('auth_bp.signup') }}">Sign up</a></li>

@@ -1,3 +1,4 @@
+from datetime import date
 from os import environ, path
 from dotenv import load_dotenv
 
@@ -25,3 +26,5 @@ class Config:
     SESSION_COOKIE_SAMESITE = 'Lax'
     SESSION_COOKIE_SECURE = environ.get('SESSION_COOKIE_SECURE') == '1'
     REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
+    # The model trains and is evaluated only on games from this date on.
+    DATA_START_DATE = date.fromisoformat(environ.get('DATA_START_DATE', '2026-01-01'))

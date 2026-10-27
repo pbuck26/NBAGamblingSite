@@ -1,0 +1,5 @@
+# Daily data/model job (flask daily). Not needed by the web server.
+-r requirements.txt
+requests==2.34.2
+numpy==2.5.4
+scikit-learn==1.9.1

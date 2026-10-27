@@ -3,3 +3,9 @@
   height: 32px;
   object-fit: contain;
 }
+
+/* Line up digits in numeric table columns. */
+.numbers td,
+.numbers-inline {
+  font-variant-numeric: tabular-nums;
+}
