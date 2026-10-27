@@ -1,7 +1,6 @@
 from flask import current_app as app
-from flask import request, render_template, Blueprint, redirect, url_for
-from flask.helpers import flash
-from patSite.Models import Users, Picks, ContactMessages, db
+from flask import render_template, Blueprint, redirect, url_for, flash
+from patSite.Models import Picks, ContactMessages, db
 from flask_login import current_user, logout_user, login_required
 import datetime
 from sqlalchemy import cast, Date
@@ -27,18 +26,17 @@ def contactPage():
         contact_message = ContactMessages(form.subject.data, form.message.data, current_user.id)
         db.session.add(contact_message)
         db.session.commit()
-        flash("Message succesfully delivered")
+        flash("Message successfully delivered")
         return redirect(url_for('routes_blueprint.renderHomepage'))
 
-    return render_template('contact.jinja2', 
-    title='Contact Page',
-    form=form,
-    template='contact-page',
-    body ="Contact Me!")
+    return render_template('contact.jinja2',
+    title='Contact',
+    form=form)
 
 @routes_blueprint.route("/logout")
+@login_required
 def logout():
-    flash(f"Goodbye {current_user.name}")
+    name = current_user.name
     logout_user()
+    flash(f"Goodbye, {name}!")
     return redirect(url_for('routes_blueprint.renderHomepage'))
-

@@ -1,32 +1,31 @@
-{% extends "websitetake2.jinja2" %}
+{% extends "base.jinja2" %}
 
 {% block content %}
-<div class="container">
-  <h2>Todays Slate</h2> <! Load the date in as a variable>
-  <p>Winners only guaranteed</p> <! Add feature to be able select team and get advanced stat graphs>           
-  <table class="table table-hover">
+<h2 class="h4">Today's slate</h2>
+<p class="text-body-secondary">Model picks for today's games.</p>
+<div class="table-responsive">
+  <table class="table table-hover align-middle text-center">
     <thead>
-      <tr style="text-align:center">
+      <tr>
         <th>Home</th>
         <th>Away</th>
-        <th>Home Moneyline</th>
-	      <th>Pick</th>
-	      <th>Prob</th>
+        <th>Home moneyline</th>
+        <th>Pick</th>
+        <th>Home win prob</th>
       </tr>
     </thead>
     <tbody>
-
-
-      {%for game in games%}
-      <tr style="vertical-align:top">
-        <td><img src={{ game['homeTeam'] }} alt="home" width="90" height="60"> </td>
-	      <td><img src={{ game['awayTeam'] }} alt="away" width="90" height="60"></td>
-	      <td>{{game['homeOdds']}}</td>
-	      <td><img src={{ game['pick'] }} alt="pick" width="90" height="60"></td>
-	      <td>{{game['prob']}}</td>
+      {% for game in games %}
+      <tr>
+        <td><img class="team-logo" src="{{ game.homeTeam }}" alt="Home team"></td>
+        <td><img class="team-logo" src="{{ game.awayTeam }}" alt="Away team"></td>
+        <td>{{ game.homeOdds }}</td>
+        <td><img class="team-logo" src="{{ game.pick }}" alt="Picked team"></td>
+        <td>{{ game.prob }}</td>
       </tr>
-      {%endfor%}
-
+      {% else %}
+      <tr><td colspan="5" class="text-body-secondary">No picks yet for today.</td></tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>

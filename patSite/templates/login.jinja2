@@ -1,49 +1,25 @@
-{% extends "websitetake2.jinja2" %}
-
-{% block styling %} 
-<link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
-{% endblock %}
-
-{% macro render_field(field) %}
-  {{ field(**kwargs)|safe }}
-  {% if field.errors %}
-    <ul class=errors>
-    {% for error in field.errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-  {{ field.label }}
-{% endmacro %}
-
+{% extends "base.jinja2" %}
+{% from "_forms.jinja2" import render_field %}
 
 {% block content %}
-  <div class="box">
-    <h2>Log In</h2>
+<div class="row justify-content-center">
+  <div class="col-sm-10 col-md-7 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h4 text-center mb-4">Log in</h2>
 
-    <form method="POST" action="/login">
-      {{ form.csrf_token }}
-      <fieldset class="inputBox">
-        {{ render_field(form.email, onkeyup="this.setAttribute('value', this.value);",  value="") }}
-      </fieldset>
+        <form method="POST" action="{{ url_for('auth_bp.login', next=next_page) }}">
+          {{ form.csrf_token }}
+          {{ render_field(form.email, autocomplete="email") }}
+          {{ render_field(form.password, autocomplete="current-password") }}
+          {{ form.submit(class_="btn btn-primary w-100") }}
+        </form>
 
-      <fieldset class="inputBox">
-        {{ render_field(form.password, required=true, onkeyup="this.setAttribute('value', this.value);",  value="") }}
-      </fieldset>
-
-      <div class="submit">
-        {{ form.submit }}
+        <p class="text-center small mt-3 mb-0">
+          Don't have an account? <a href="{{ url_for('auth_bp.signup') }}">Sign up</a>
+        </p>
       </div>
-
-      <div class="login-signup">
-        <span>Don't have an account?</span>
-        <a href="{{ url_for('auth_bp.signup') }}">Sign up.</a>
-      </div>
-
-    </form>
+    </div>
   </div>
-
-
+</div>
 {% endblock %}
-
-  

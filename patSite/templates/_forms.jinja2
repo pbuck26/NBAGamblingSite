@@ -1,0 +1,10 @@
+{# Bootstrap floating-label field with inline validation errors. #}
+{% macro render_field(field) %}
+  <div class="form-floating mb-3">
+    {{ field(class_="form-control" ~ (" is-invalid" if field.errors else ""), placeholder=field.label.text, **kwargs) }}
+    {{ field.label }}
+    {% for error in field.errors %}
+      <div class="invalid-feedback">{{ error }}</div>
+    {% endfor %}
+  </div>
+{% endmacro %}

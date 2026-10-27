@@ -1,8 +1,13 @@
-from sqlalchemy.orm import backref
+import hashlib
+import hmac
 from . import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime as dt
+
+# Accounts created before 2026 were hashed with Werkzeug's old single-round
+# "sha256" method, which current Werkzeug no longer accepts.
+LEGACY_HASH_PREFIX = 'sha256$'
 
 class Users(UserMixin, db.Model):
     __tablename__='users'
@@ -16,17 +21,26 @@ class Users(UserMixin, db.Model):
 
     def __init__(self, email, password, name):
         self.email      = email
-        self.password   = password
         self.name       = name
         self.created_on = dt.now()
         self.last_login = dt.now()
-    
+        self.set_password(password)
+
     def set_password(self, password):
-        self.password = generate_password_hash(password, 'sha256')
+        self.password = generate_password_hash(password)
 
     def check_password(self, password):
+        """Verify a password. A matching legacy hash is upgraded to the
+        current algorithm; the caller is responsible for committing."""
+        if self.password.startswith(LEGACY_HASH_PREFIX):
+            _, salt, expected = self.password.split('$', 2)
+            actual = hmac.new(salt.encode(), password.encode(), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(actual, expected):
+                return False
+            self.set_password(password)
+            return True
         return check_password_hash(self.password, password)
-    
+
     def __repr__(self):
         return '<User {}>'.format(self.id)
 
@@ -51,7 +65,7 @@ class Picks(db.Model):
         self.date           = dt.now().date()
         self.pick           = pick
         self.prob           = prob
-        self.vegas_prob     = pick
+        self.vegas_prob     = vegas_prob
 
 
 class ContactMessages(db.Model):
@@ -65,5 +79,5 @@ class ContactMessages(db.Model):
     def __init__(self, subject, message, user_id):
         self.subject       = subject
         self.message       = message
-        self.date          = dt.now().date()
+        self.date          = dt.now()
         self.user_id       = user_id

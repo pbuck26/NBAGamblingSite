@@ -1,40 +1,23 @@
-{% extends "websitetake2.jinja2" %}
-
-{% macro render_field(field) %}
-  {{ field(**kwargs)|safe }}
-  {% if field.errors %}
-    <ul class=errors>
-    {% for error in field.errors %}
-      <li>{{ error }}</li>
-    {% endfor %}
-    </ul>
-  {% endif %}
-  {{ field.label }}
-{% endmacro %}
-
-{% block styling %} 
-<link rel="stylesheet" href="{{ url_for("static", filename="styleContactForm.css") }}">
-{% endblock %}
+{% extends "base.jinja2" %}
+{% from "_forms.jinja2" import render_field %}
 
 {% block content %}
-<div class="box">
-    <h2>Contact Me</h2>
+<div class="row justify-content-center">
+  <div class="col-md-10 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h2 class="h4 text-center mb-4">Contact me</h2>
 
-    <form method="POST" action="/contact">
-      {{ form.csrf_token }}
-
-      <fieldset class="inputBox">
-        {{ render_field(form.subject, onkeyup="this.setAttribute('value', this.value);",  value="") }}
-      </fieldset>
-
-      <fieldset class="inputBox">
-        {{ render_field(form.message, onkeyup="this.setAttribute('value', this.value);",  value="") }}
-      </fieldset>
-      
-      <div class="submit-button">
-        {{ form.submit }}
+        <form method="POST" action="{{ url_for('routes_blueprint.contactPage') }}">
+          {{ form.csrf_token }}
+          {{ render_field(form.subject) }}
+          {{ render_field(form.message, style="height: 12rem") }}
+          <div class="text-end">
+            {{ form.submit(class_="btn btn-primary px-4") }}
+          </div>
+        </form>
       </div>
-
-    </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
