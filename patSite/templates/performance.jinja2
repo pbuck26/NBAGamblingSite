@@ -110,7 +110,7 @@
   {% if m.blend %}
   The combined estimate weights the market by <strong>{{ '%.2f'|format(m.blend.market_weight) }}</strong> and the model by
   <strong>{{ '%.2f'|format(m.blend.model_weight) }}</strong> (fitted on {{ m.blend.games }} games). A model weight near zero means the
-  model adds little beyond the betting line, and the site will flag few bets.
+  model adds little beyond the betting line; below {{ m.min_model_weight }} the site flags no bets.
   {% endif %}
 </p>
 

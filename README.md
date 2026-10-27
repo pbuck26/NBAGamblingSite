@@ -24,8 +24,9 @@ or used.
    the betting line's (bookmaker margin removed), fitted on earlier out-of-sample
    predictions. Its weights show how much the model adds beyond the market.
 4. **Value bets**: flagged only when the blended estimate expects at least +3% return at
-   the posted odds, the model has positive weight in the blend, the model itself leans
-   the same way, and the odds are no longer than +400.
+   the posted odds, the model's weight in the blend is at least 0.1, the model itself
+   leans the same way, and the odds are no longer than +400. If the model isn't adding
+   information beyond the betting line, the site flags no bets.
 
 Everything is evaluated **walk-forward**: each day's games are predicted by a model
 trained only on earlier days. Beating the closing line consistently is hard; the

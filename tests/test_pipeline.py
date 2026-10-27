@@ -149,8 +149,9 @@ def test_value_bet_guardrails():
     weights = {"market_weight": 1.0, "model_weight": 0.3, "intercept": 0.0}
     # Combined estimate sees value on the underdog and the model agrees: bet.
     assert model.value_bet(0.45, 0.45, -200, 170, weights)[0] == "away"
-    # The blend gives the model no weight: never bet.
+    # The blend gives the model no real weight: never bet.
     assert model.value_bet(0.45, 0.45, -200, 170, {**weights, "model_weight": -0.2}) is None
+    assert model.value_bet(0.45, 0.45, -200, 170, {**weights, "model_weight": 0.004}) is None
     assert model.value_bet(0.45, 0.45, -200, 170, None) is None
     # Combined estimate likes the underdog but the model is MORE bullish on the favorite
     # than the market (0.70 > 0.64): that's a quirk of the blend, not model information.

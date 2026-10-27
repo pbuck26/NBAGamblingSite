@@ -20,6 +20,7 @@ FEATURES = ("home_court", "elo_diff", "form_diff", "season_margin_diff",
 MIN_TEAM_GAMES = 10     # skip games until both teams have this much history
 MIN_TRAIN_GAMES = 200   # don't fit a model on fewer games than this
 MIN_BLEND_GAMES = 150   # out-of-sample predictions with odds needed before betting
+MIN_MODEL_WEIGHT = 0.1  # the model's weight in the blend must be at least this to bet at all
 MIN_EV = 0.03           # flag a bet only if expected return at the posted odds is +3% or better
 MAX_ODDS = 400          # skip longshots, where small errors swamp the edge
 BET_THRESHOLDS = (0.0, MIN_EV, 0.06)
@@ -90,9 +91,9 @@ def choose_bet(home_prob, home_ml, away_ml, min_ev=MIN_EV):
 def value_bet(model_prob, combined_prob, home_ml, away_ml, weights, min_ev=MIN_EV):
     """The bet to flag, if any: (side, odds, ev). Two guardrails keep the blend from
     betting on quirks of the market line rather than on the model's information:
-    the model must carry positive weight, and the model itself must favor the bet side
-    more than the market does."""
-    if not weights or weights["model_weight"] <= 0 or combined_prob is None:
+    the model must carry real weight in the blend, and the model itself must favor the
+    bet side more than the market does."""
+    if not weights or weights["model_weight"] < MIN_MODEL_WEIGHT or combined_prob is None:
         return None
     bet = choose_bet(combined_prob, home_ml, away_ml, min_ev)
     if not bet:

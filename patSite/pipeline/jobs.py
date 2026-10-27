@@ -155,6 +155,7 @@ def run_backtest():
         metrics["coefficients"] = model.coefficients(model.fit(finished))
     metrics["data_start"] = current_app.config["DATA_START_DATE"].isoformat()
     metrics["site_min_ev"] = model.MIN_EV
+    metrics["min_model_weight"] = model.MIN_MODEL_WEIGHT
     db.session.add(ModelRun(created_at=utc_now(), metrics=metrics))
     db.session.commit()
     return metrics
