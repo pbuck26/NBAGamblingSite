@@ -35,6 +35,8 @@ def sync_games(start=None, end=None, fetch=espn.fetch_scoreboard, pause=0.2):
             _upsert_game(data)
             count += 1
         db.session.commit()
+        if day.day == 1 or day == end:
+            log.info("Synced through %s: %d games so far", day, count)
         day += timedelta(days=1)
         if pause:
             time.sleep(pause)

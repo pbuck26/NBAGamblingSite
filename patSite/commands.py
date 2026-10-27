@@ -1,4 +1,5 @@
 import click
+import logging
 from datetime import date
 from .Models import db
 from flask import Blueprint
@@ -7,6 +8,9 @@ commands_bp= Blueprint('commands', __name__, cli_group=None)
 
 # Pipeline modules import numpy/scikit-learn, so they're imported inside the
 # commands to keep them out of the web workers.
+
+def show_pipeline_logs():
+    logging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')
 
 @commands_bp.cli.command('create_db')
 def create_db():
@@ -22,12 +26,14 @@ def drop_db():
 @click.option('--start', type=date.fromisoformat, help='First date to fetch (YYYY-MM-DD).')
 def sync_games(start):
     """Fetch games and odds from ESPN into the database."""
+    show_pipeline_logs()
     from patSite.pipeline import jobs
     click.echo(f"Synced {jobs.sync_games(start=start)} games")
 
 @commands_bp.cli.command('daily')
 def daily():
     """Sync games, grade finished picks, update the backtest, and make upcoming picks."""
+    show_pipeline_logs()
     from patSite.pipeline import jobs, model
     click.echo(f"Synced {jobs.sync_games()} games")
     click.echo(f"Graded {jobs.grade_predictions()} picks")

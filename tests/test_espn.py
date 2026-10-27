@@ -1,6 +1,10 @@
+import json
 from datetime import date, datetime
 
-from patSite.pipeline.espn import parse_moneylines, parse_scoreboard
+import pytest
+import requests
+
+from patSite.pipeline.espn import FeedError, fetch_scoreboard, parse_moneylines, parse_scoreboard
 from tests.factories import espn_event
 
 
@@ -43,3 +47,40 @@ def test_moneylines_from_older_odds_shape_and_even():
     assert parse_moneylines([{"moneyline": {"home": {"open": {"odds": "EVEN"}},
                                             "away": {"close": {"odds": "-120"}}}}]) == (100, -120)
     assert parse_moneylines([{"details": "BOS -5.5"}]) == (None, None)
+
+
+class FakeResponse:
+    def __init__(self, status=200, body='{"events": []}', content_type="application/json"):
+        self.status_code, self.text = status, body
+        self.content = body.encode()
+        self.headers = {"Content-Type": content_type}
+
+    def json(self):
+        return json.loads(self.text)
+
+
+class FakeSession:
+    def __init__(self, *replies):
+        self.replies, self.calls = list(replies), 0
+
+    def get(self, *args, **kwargs):
+        self.calls += 1
+        reply = self.replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return reply
+
+
+def test_fetch_retries_bad_replies_then_succeeds():
+    session = FakeSession(FakeResponse(body="", content_type="text/html"),
+                          requests.ConnectionError("reset"),
+                          FakeResponse(status=503, body="busy"),
+                          FakeResponse())
+    assert fetch_scoreboard(date(2026, 1, 15), session, backoff=0) == {"events": []}
+    assert session.calls == 4
+
+
+def test_fetch_gives_up_with_a_clear_error():
+    session = FakeSession(*[FakeResponse(body="<html>Access Denied</html>", content_type="text/html")] * 4)
+    with pytest.raises(FeedError, match=r"2026-01-15 failed after 4 attempts: non-JSON reply \(text/html"):
+        fetch_scoreboard(date(2026, 1, 15), session, backoff=0)

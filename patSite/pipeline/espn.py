@@ -5,6 +5,7 @@ unexpected is skipped and logged rather than guessed at.
 """
 import logging
 import sys
+import time
 from datetime import date, datetime, timezone
 
 import requests
@@ -17,14 +18,36 @@ log = logging.getLogger(__name__)
 
 SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
 PRESEASON = 1
+ATTEMPTS = 4
 
 
-def fetch_scoreboard(day, session=None):
+class FeedError(RuntimeError):
+    pass
+
+
+def fetch_scoreboard(day, session=None, attempts=ATTEMPTS, backoff=2.0):
+    """The scoreboard JSON for one US Eastern date. Retries errors, throttling and
+    non-JSON replies with exponential backoff before giving up."""
     http = session or requests
-    resp = http.get(SCOREBOARD_URL, params={"dates": day.strftime("%Y%m%d")}, timeout=30,
-                    headers={"User-Agent": "nbagamblingsite/1.0"})
-    resp.raise_for_status()
-    return resp.json()
+    problem = None
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = http.get(SCOREBOARD_URL, params={"dates": day.strftime("%Y%m%d")}, timeout=30,
+                            headers={"User-Agent": "nbagamblingsite/1.0"})
+            if resp.status_code == 200:
+                try:
+                    return resp.json()
+                except ValueError:
+                    problem = (f"non-JSON reply ({resp.headers.get('Content-Type')}, "
+                               f"{len(resp.content)} bytes): {resp.text[:200]!r}")
+            else:
+                problem = f"HTTP {resp.status_code}: {resp.text[:200]!r}"
+        except requests.RequestException as exc:
+            problem = repr(exc)
+        log.warning("ESPN scoreboard for %s, attempt %d of %d: %s", day, attempt, attempts, problem)
+        if attempt < attempts:
+            time.sleep(backoff * 2 ** (attempt - 1))
+    raise FeedError(f"ESPN scoreboard for {day} failed after {attempts} attempts: {problem}")
 
 
 def parse_scoreboard(data):
