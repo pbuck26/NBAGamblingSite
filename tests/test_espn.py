@@ -4,7 +4,7 @@ from datetime import date, datetime
 import pytest
 import requests
 
-from patSite.pipeline.espn import (FeedError, fetch_scoreboard, parse_moneylines, parse_scoreboard,
+from patSite.pipeline.espn import (FeedError, NotFound, fetch_scoreboard, parse_moneylines, parse_scoreboard,
                                    parse_summary_moneylines)
 from tests.factories import espn_event
 
@@ -99,3 +99,10 @@ SUMMARY_PICKCENTER = {"pickcenter": [{
 def test_summary_pickcenter_moneylines():
     assert parse_summary_moneylines(SUMMARY_PICKCENTER) == (-380, 300)
     assert parse_summary_moneylines({}) == (None, None)
+
+
+def test_fetch_does_not_retry_not_found():
+    session = FakeSession(FakeResponse(status=404, body='{"code":404}'))
+    with pytest.raises(NotFound):
+        fetch_scoreboard(date(2026, 1, 15), session, backoff=0)
+    assert session.calls == 1

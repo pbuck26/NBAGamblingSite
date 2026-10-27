@@ -56,16 +56,27 @@ def backfill_odds(fetch=espn.fetch_summary, pause=0.2):
     found = 0
     session = requests.Session()
     for i, game in enumerate(missing, 1):
-        home_ml, away_ml = espn.parse_summary_moneylines(fetch(game.id, session))
+        try:
+            home_ml, away_ml = espn.parse_summary_moneylines(fetch(game.id, session))
+        except espn.NotFound:
+            log.warning("No ESPN summary for %s (%s at %s); skipping its odds",
+                        game.id, game.away_team, game.home_team)
+            home_ml = away_ml = None
+        except espn.FeedError as exc:
+            log.warning("%s; will retry on the next run", exc)
+            continue
         if home_ml is not None and away_ml is not None:
             game.home_ml, game.away_ml = home_ml, away_ml
             found += 1
         game.odds_checked = True
-        if i % 50 == 0 or i == len(missing):
+        if i % 50 == 0:
             db.session.commit()
             log.info("Odds backfill: %d of %d games checked, %d lines found", i, len(missing), found)
         if pause:
             time.sleep(pause)
+    db.session.commit()
+    if missing:
+        log.info("Odds backfill done: %d lines found for %d games", found, len(missing))
     return found
 
 

@@ -27,6 +27,10 @@ class FeedError(RuntimeError):
     pass
 
 
+class NotFound(FeedError):
+    """ESPN has no such resource (HTTP 404); retrying won't help."""
+
+
 def fetch_scoreboard(day, session=None, attempts=ATTEMPTS, backoff=2.0):
     """The scoreboard JSON for one US Eastern date: schedule, scores, and moneylines
     for games that haven't finished."""
@@ -53,6 +57,8 @@ def _get_json(url, params, label, session, attempts, backoff):
                 except ValueError:
                     problem = (f"non-JSON reply ({resp.headers.get('Content-Type')}, "
                                f"{len(resp.content)} bytes): {resp.text[:200]!r}")
+            elif resp.status_code == 404:
+                raise NotFound(f"ESPN {label}: HTTP 404")
             else:
                 problem = f"HTTP {resp.status_code}: {resp.text[:200]!r}"
         except requests.RequestException as exc:

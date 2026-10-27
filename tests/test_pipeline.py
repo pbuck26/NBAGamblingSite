@@ -48,6 +48,21 @@ def test_backfill_odds_looks_up_each_finished_game_once(season):
     assert calls == []                                      # never looked up twice
 
 
+def test_backfill_odds_survives_missing_and_failing_summaries(season):
+    from patSite.pipeline.espn import FeedError, NotFound
+    gone, flaky = Game.query.filter(Game.completed.is_(True)).order_by(Game.start_time).limit(2).all()
+    for g in (gone, flaky):
+        g.home_ml = g.away_ml = None
+    db.session.commit()
+
+    def fake_summary(event_id, session=None):
+        raise NotFound("404") if event_id == gone.id else FeedError("timed out")
+
+    assert jobs.backfill_odds(fetch=fake_summary, pause=0) == 0
+    assert gone.odds_checked             # a 404 is permanent: don't ask again
+    assert not flaky.odds_checked        # a transient failure is retried next run
+
+
 def test_predictions_only_for_games_that_have_not_started(season):
     assert jobs.make_predictions() == 12   # TODAY and tomorrow
     preds = Prediction.query.all()
