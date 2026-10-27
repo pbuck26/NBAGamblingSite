@@ -47,6 +47,28 @@ def sync_games(start=None, end=None, fetch=espn.fetch_scoreboard, pause=0.2):
     return count
 
 
+def backfill_odds(fetch=espn.fetch_summary, pause=0.2):
+    """Look up moneylines for finished games that never had one (the scoreboard drops odds
+    once a game ends). Each game is looked up once, whether or not odds turn up."""
+    missing = (Game.query.filter(Game.completed.is_(True), Game.home_ml.is_(None),
+                                 Game.odds_checked.is_(False))
+               .order_by(Game.start_time).all())
+    found = 0
+    session = requests.Session()
+    for i, game in enumerate(missing, 1):
+        home_ml, away_ml = espn.parse_summary_moneylines(fetch(game.id, session))
+        if home_ml is not None and away_ml is not None:
+            game.home_ml, game.away_ml = home_ml, away_ml
+            found += 1
+        game.odds_checked = True
+        if i % 50 == 0 or i == len(missing):
+            db.session.commit()
+            log.info("Odds backfill: %d of %d games checked, %d lines found", i, len(missing), found)
+        if pause:
+            time.sleep(pause)
+    return found
+
+
 def _upsert_game(data):
     game = db.session.get(Game, data["id"]) or Game(id=data["id"])
     for key, value in data.items():

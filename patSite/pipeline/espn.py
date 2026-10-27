@@ -28,14 +28,25 @@ class FeedError(RuntimeError):
 
 
 def fetch_scoreboard(day, session=None, attempts=ATTEMPTS, backoff=2.0):
-    """The scoreboard JSON for one US Eastern date. Retries errors, throttling and
-    non-JSON replies with exponential backoff before giving up."""
+    """The scoreboard JSON for one US Eastern date: schedule, scores, and moneylines
+    for games that haven't finished."""
+    return _get_json(SCOREBOARD_URL, {"dates": day.strftime("%Y%m%d")}, f"scoreboard for {day}",
+                     session, attempts, backoff)
+
+
+def fetch_summary(event_id, session=None, attempts=ATTEMPTS, backoff=2.0):
+    """One game's summary JSON. Unlike the scoreboard, it keeps moneylines after the game."""
+    return _get_json(SUMMARY_URL, {"event": event_id}, f"summary for game {event_id}",
+                     session, attempts, backoff)
+
+
+def _get_json(url, params, label, session, attempts, backoff):
+    """GET JSON, retrying errors, throttling and non-JSON replies with exponential backoff."""
     http = session or requests
     problem = None
     for attempt in range(1, attempts + 1):
         try:
-            resp = http.get(SCOREBOARD_URL, params={"dates": day.strftime("%Y%m%d")}, timeout=30,
-                            headers={"User-Agent": "nbagamblingsite/1.0"})
+            resp = http.get(url, params=params, timeout=30, headers={"User-Agent": "nbagamblingsite/1.0"})
             if resp.status_code == 200:
                 try:
                     return resp.json()
@@ -46,10 +57,10 @@ def fetch_scoreboard(day, session=None, attempts=ATTEMPTS, backoff=2.0):
                 problem = f"HTTP {resp.status_code}: {resp.text[:200]!r}"
         except requests.RequestException as exc:
             problem = repr(exc)
-        log.warning("ESPN scoreboard for %s, attempt %d of %d: %s", day, attempt, attempts, problem)
+        log.warning("ESPN %s, attempt %d of %d: %s", label, attempt, attempts, problem)
         if attempt < attempts:
             time.sleep(backoff * 2 ** (attempt - 1))
-    raise FeedError(f"ESPN scoreboard for {day} failed after {attempts} attempts: {problem}")
+    raise FeedError(f"ESPN {label} failed after {attempts} attempts: {problem}")
 
 
 def parse_scoreboard(data):
@@ -103,6 +114,11 @@ def parse_event(event):
     }
 
 
+def parse_summary_moneylines(summary):
+    """(home, away) moneylines from a game summary's pickcenter, else (None, None)."""
+    return parse_moneylines(summary.get("pickcenter") or [])
+
+
 def parse_moneylines(odds_list):
     """(home, away) American moneylines from the first provider that has both, else (None, None)."""
     for odds in odds_list:
@@ -152,9 +168,7 @@ def _show_raw_odds(data):
     comp = (event.get("competitions") or [{}])[0]
     print(f"{event.get('name')}: scoreboard competitions[0].odds =")
     print(json.dumps(comp.get("odds"), indent=1)[:2500])
-    resp = requests.get(SUMMARY_URL, params={"event": event["id"]}, timeout=30,
-                        headers={"User-Agent": "nbagamblingsite/1.0"})
-    summary = resp.json() if resp.ok else {}
+    summary = fetch_summary(event["id"])
     print(f"summary endpoint keys: {sorted(summary)}")
     for key in ("pickcenter", "odds"):
         if summary.get(key):

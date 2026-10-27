@@ -4,7 +4,8 @@ from datetime import date, datetime
 import pytest
 import requests
 
-from patSite.pipeline.espn import FeedError, fetch_scoreboard, parse_moneylines, parse_scoreboard
+from patSite.pipeline.espn import (FeedError, fetch_scoreboard, parse_moneylines, parse_scoreboard,
+                                   parse_summary_moneylines)
 from tests.factories import espn_event
 
 
@@ -84,3 +85,17 @@ def test_fetch_gives_up_with_a_clear_error():
     session = FakeSession(*[FakeResponse(body="<html>Access Denied</html>", content_type="text/html")] * 4)
     with pytest.raises(FeedError, match=r"2026-01-15 failed after 4 attempts: non-JSON reply \(text/html"):
         fetch_scoreboard(date(2026, 1, 15), session, backoff=0)
+
+
+# Trimmed from a real summary reply (Timberwolves at Thunder, 2026-03-15) seen in CI.
+SUMMARY_PICKCENTER = {"pickcenter": [{
+    "provider": {"id": "100", "name": "DraftKings", "priority": 1},
+    "details": "OKC -8.5", "overUnder": 227.5, "spread": -8.5,
+    "awayTeamOdds": {"favorite": False, "underdog": True, "moneyLine": 300, "spreadOdds": -102.0, "teamId": "16"},
+    "homeTeamOdds": {"favorite": True, "underdog": False, "moneyLine": -380, "spreadOdds": -118.0, "teamId": "25"},
+}]}
+
+
+def test_summary_pickcenter_moneylines():
+    assert parse_summary_moneylines(SUMMARY_PICKCENTER) == (-380, 300)
+    assert parse_summary_moneylines({}) == (None, None)

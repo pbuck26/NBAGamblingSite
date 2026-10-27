@@ -27,6 +27,27 @@ def test_sync_is_idempotent_and_keeps_known_odds(season, app):
     assert Game.query.filter(Game.game_date == day, Game.home_ml.is_(None)).count() == 0
 
 
+def test_backfill_odds_looks_up_each_finished_game_once(season):
+    from tests.test_espn import SUMMARY_PICKCENTER
+    no_odds = Game.query.filter(Game.completed.is_(True)).order_by(Game.start_time).limit(3).all()
+    for g in no_odds:
+        g.home_ml = g.away_ml = None
+    db.session.commit()
+    calls = []
+
+    def fake_summary(event_id, session=None):
+        calls.append(event_id)
+        return SUMMARY_PICKCENTER if event_id == no_odds[0].id else {}
+
+    assert jobs.backfill_odds(fetch=fake_summary, pause=0) == 1
+    assert sorted(calls) == sorted(g.id for g in no_odds)   # only games missing odds
+    assert (no_odds[0].home_ml, no_odds[0].away_ml) == (-380, 300)
+    assert no_odds[1].home_ml is None and no_odds[1].odds_checked
+    calls.clear()
+    assert jobs.backfill_odds(fetch=fake_summary, pause=0) == 0
+    assert calls == []                                      # never looked up twice
+
+
 def test_predictions_only_for_games_that_have_not_started(season):
     assert jobs.make_predictions() == 12   # TODAY and tomorrow
     preds = Prediction.query.all()

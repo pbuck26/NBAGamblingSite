@@ -62,6 +62,7 @@ class Game(db.Model):
     away_score   = db.Column(db.Integer, nullable=True)
     home_ml      = db.Column(db.Integer, nullable=True)  # latest American moneyline seen
     away_ml      = db.Column(db.Integer, nullable=True)
+    odds_checked = db.Column(db.Boolean, nullable=False, default=False)  # summary lookup done
     prediction   = db.relationship('Prediction', back_populates='game', uselist=False)
 
     @property

@@ -29,6 +29,7 @@ def sync_games(start):
     show_pipeline_logs()
     from patSite.pipeline import jobs
     click.echo(f"Synced {jobs.sync_games(start=start)} games")
+    click.echo(f"Found moneylines for {jobs.backfill_odds()} finished games")
 
 @commands_bp.cli.command('daily')
 def daily():
@@ -36,6 +37,7 @@ def daily():
     show_pipeline_logs()
     from patSite.pipeline import jobs, model
     click.echo(f"Synced {jobs.sync_games()} games")
+    click.echo(f"Found moneylines for {jobs.backfill_odds()} finished games")
     click.echo(f"Graded {jobs.grade_predictions()} picks")
     metrics = jobs.run_backtest()  # before predicting: picks use its market-blend weights
     click.echo(f"Predicted {jobs.make_predictions()} upcoming games")
