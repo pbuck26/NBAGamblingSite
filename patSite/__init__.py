@@ -1,5 +1,6 @@
 import secrets
 from flask import Flask
+from sqlalchemy import create_engine
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 
@@ -28,6 +29,19 @@ def create_app(test_config=None):
         from patSite.commands import commands_bp
         app.register_blueprint(auth_bp)
         app.register_blueprint(commands_bp)
-        Models.db.create_all()
+        create_tables(app)
 
     return app
+
+def create_tables(app):
+    """Create any missing tables. On Neon this goes over the direct connection,
+    since schema changes shouldn't run through the PgBouncer pooler."""
+    schema_url = app.config.get("SCHEMA_DATABASE_URI")
+    if not schema_url:
+        db.create_all()
+        return
+    engine = create_engine(schema_url, pool_pre_ping=True)
+    try:
+        db.metadata.create_all(engine)
+    finally:
+        engine.dispose()

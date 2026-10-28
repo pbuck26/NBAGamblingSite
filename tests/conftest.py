@@ -15,6 +15,8 @@ def app(tmp_path):
         "WTF_CSRF_ENABLED": False,
         # CI also runs the suite against Postgres, which production uses.
         "SQLALCHEMY_DATABASE_URI": os.environ.get("TEST_DATABASE_URL") or f"sqlite:///{tmp_path / 'test.db'}",
+        # Never let a developer's Neon URL from .env.local reach the test run.
+        "SCHEMA_DATABASE_URI": None,
     })
     with app.app_context():
         db.create_all()

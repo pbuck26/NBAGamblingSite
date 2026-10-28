@@ -1,5 +1,7 @@
 # Secrets: never commit real values. Copy .env.example to .env instead.
 .env
+.env.local
+.env.*.local
 
 # Python
 __pycache__/
@@ -12,3 +14,5 @@ venv/
 *.db
 *.sqlite3
 instance/
+.neon
+node_modules/

@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}   # optional
       SECRET_KEY: not-used-by-the-cli
     steps:
       - name: Check for the database secret

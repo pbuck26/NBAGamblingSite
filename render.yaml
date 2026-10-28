@@ -12,6 +12,8 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false   # paste your Neon connection string when prompted
+        sync: false   # Neon pooled connection string (from `neon env pull`)
+      - key: DATABASE_URL_UNPOOLED
+        sync: false   # Neon direct connection string, used to create tables
       - key: SESSION_COOKIE_SECURE
         value: "1"

@@ -44,7 +44,9 @@ flask --app wsgi run          # http://127.0.0.1:5000
 pytest
 ```
 
-Without `DATABASE_URL` the app uses a local SQLite file (`nba.db`).
+Without `DATABASE_URL` the app uses a local SQLite file (`nba.db`). To use the Neon
+database instead, run `neon login` then `neon env pull`, which writes `DATABASE_URL` and
+`DATABASE_URL_UNPOOLED` to `.env.local` (or `.env` if it exists); the app reads both files.
 
 ## Deploy for free
 
@@ -54,12 +56,16 @@ Without `DATABASE_URL` the app uses a local SQLite file (`nba.db`).
 | Database | [Neon](https://neon.com) Postgres | Doesn't expire (Render's free Postgres is deleted after 30 days) |
 | Daily job | GitHub Actions | Free for public repos |
 
-1. **Neon**: create a project and copy its connection string.
-2. **GitHub**: add it as a repository secret named `DATABASE_URL`
+1. **Neon**: this repo is linked to a Neon project (`neon.ts`, plus a local `.neon` file
+   that `neon init` writes). Run `npm install`, `neon login`, then `neon deploy`, which
+   applies `neon.ts` and pulls the connection strings: `DATABASE_URL` (pooled, for the
+   app's queries) and `DATABASE_URL_UNPOOLED` (direct, which the app uses only to create
+   its tables, as Neon recommends for schema changes).
+2. **GitHub**: add both as repository secrets with the same names
    (Settings → Secrets and variables → Actions). Run the *Daily picks* workflow once by
    hand from the Actions tab to load the 2026 games.
 3. **Render**: New → Blueprint, pick this repo. `render.yaml` sets everything up; paste
-   the same Neon connection string when asked for `DATABASE_URL`.
+   the same two values when asked for `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
 
 The daily workflow runs twice a day (morning and late afternoon Eastern). GitHub pauses
 scheduled workflows in public repos after 60 days with no commits; re-enable it from the

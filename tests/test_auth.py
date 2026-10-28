@@ -107,3 +107,22 @@ def test_contact_requires_login_then_saves_message(client, user):
     assert resp.headers["Location"] == "/"
     msg = ContactMessages.query.one()
     assert (msg.subject, msg.user_id) == ("Hi", user.id)
+
+
+def test_schema_is_created_over_the_direct_url(tmp_path):
+    """With DATABASE_URL_UNPOOLED set, tables are created through it, not the pooled URL."""
+    from sqlalchemy import create_engine, inspect
+    from patSite import create_app
+    pooled, direct = tmp_path / "pooled.db", tmp_path / "direct.db"
+    create_app({"TESTING": True, "SECRET_KEY": "x",
+                "SQLALCHEMY_DATABASE_URI": f"sqlite:///{pooled}",
+                "SCHEMA_DATABASE_URI": f"sqlite:///{direct}"})
+    assert "games" in inspect(create_engine(f"sqlite:///{direct}")).get_table_names()
+    assert not pooled.exists() or inspect(create_engine(f"sqlite:///{pooled}")).get_table_names() == []
+
+
+def test_database_url_normalization():
+    from config import normalize_url
+    assert normalize_url("postgres://u:p@h/db") == "postgresql://u:p@h/db"
+    assert normalize_url("postgresql://u:p@h/db?sslmode=require") == "postgresql://u:p@h/db?sslmode=require"
+    assert normalize_url("") is None and normalize_url(None) is None
