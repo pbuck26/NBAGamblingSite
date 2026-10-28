@@ -1,47 +1,48 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, email_validator
+from wtforms import StringField, EmailField, PasswordField, SubmitField, TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 class SignupForm(FlaskForm):
     name = StringField(
         label=('Name'),
-        validators=[DataRequired()]
+        validators=[DataRequired(), Length(max=100)]
     )
-    email = StringField(
+    email = EmailField(
         label=('Email'),
         validators=[
-            Length(min=6),
-            DataRequired()
+            DataRequired(),
+            Email(message='Enter a valid email address.'),
+            Length(max=200)
         ]
     )
     password = PasswordField(
         label=('Password'),
         validators=[
             DataRequired(),
-            Length(min=6, message='Select a stronger password.')
+            Length(min=8, message='Use at least 8 characters.')
         ]
     )
     confirm = PasswordField(
-        label=('Confirm Your Password'),
+        label=('Confirm your password'),
         validators=[
             DataRequired(),
             EqualTo('password', message='Passwords must match.')
         ]
     )
-    submit = SubmitField(label=('Register'))
+    submit = SubmitField(label=('Sign up'))
 
 
 class LoginForm(FlaskForm):
-    email = StringField(
+    email = EmailField(
         label=('Email'),
         validators=[
             DataRequired()
         ]
     )
     password = PasswordField(label=('Password'), validators=[DataRequired()])
-    submit = SubmitField(label=('Log In'))
+    submit = SubmitField(label=('Log in'))
 
 class ContactForm(FlaskForm):
-    subject = StringField("Subject",  validators=[DataRequired()])
-    message = TextAreaField("Message",  validators=[DataRequired()])
+    subject = StringField("Subject",  validators=[DataRequired(), Length(max=200)])
+    message = TextAreaField("Message",  validators=[DataRequired(), Length(max=5000)])
     submit = SubmitField("Send")

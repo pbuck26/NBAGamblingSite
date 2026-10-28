@@ -1,0 +1,31 @@
+name: Backtest
+
+# Fetches real games and closing moneylines since DATA_START_DATE from ESPN into a
+# throwaway SQLite database and posts the walk-forward backtest to the run's summary.
+on:
+  push:
+    paths:
+      - "patSite/pipeline/**"
+      - "patSite/Models.py"
+      - "requirements-pipeline.txt"
+      - ".github/workflows/backtest.yml"
+  workflow_dispatch:
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:////tmp/backtest.db
+      SECRET_KEY: not-used-by-the-cli
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-pipeline.txt
+      - name: Fetch games
+        run: flask --app wsgi sync-games
+      - name: Backtest
+        run: flask --app wsgi backtest --report "$GITHUB_STEP_SUMMARY"

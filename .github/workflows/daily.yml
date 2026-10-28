@@ -1,0 +1,42 @@
+name: Daily picks
+
+# Syncs games and odds, grades finished picks, re-runs the backtest and posts
+# the day's picks to the production database. Needs a DATABASE_URL repository
+# secret (Settings > Secrets and variables > Actions).
+#
+# GitHub pauses scheduled workflows in public repos after 60 days without any
+# repository activity; re-enable it from the Actions tab if that happens.
+on:
+  schedule:
+    # 14:17 and 20:47 UTC: morning and late afternoon US Eastern, before tip-offs.
+    - cron: "17 14 * * *"
+    - cron: "47 20 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: daily-picks
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SECRET_KEY: not-used-by-the-cli
+    steps:
+      - name: Check for the database secret
+        if: env.DATABASE_URL == ''
+        run: echo "::warning::Add a DATABASE_URL repository secret to run the daily picks job."
+      - uses: actions/checkout@v5
+        if: env.DATABASE_URL != ''
+      - uses: actions/setup-python@v6
+        if: env.DATABASE_URL != ''
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - if: env.DATABASE_URL != ''
+        run: pip install -r requirements-pipeline.txt
+      - name: Sync, grade, backtest and pick
+        if: env.DATABASE_URL != ''
+        shell: bash  # explicit bash enables pipefail, so a failing job isn't hidden by tee
+        run: flask --app wsgi daily | tee -a "$GITHUB_STEP_SUMMARY"

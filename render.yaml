@@ -1,0 +1,17 @@
+# Render Blueprint for the web app (free plan). The daily data job runs on
+# GitHub Actions (.github/workflows/daily.yml), not here.
+services:
+  - type: web
+    name: nba-gambling-site
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app
+    healthCheckPath: /
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false   # paste your Neon connection string when prompted
+      - key: SESSION_COOKIE_SECURE
+        value: "1"

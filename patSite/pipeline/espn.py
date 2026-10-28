@@ -1,0 +1,194 @@
+"""Scores, schedule and moneylines from ESPN's public scoreboard feed.
+
+The feed is unofficial and undocumented, so parsing is defensive: anything
+unexpected is skipped and logged rather than guessed at.
+"""
+import json
+import logging
+import sys
+import time
+from datetime import date, datetime, timezone
+
+import requests
+
+from patSite.clock import ET
+from patSite.pipeline.odds import parse_american
+from patSite.teams import canonical_team
+
+log = logging.getLogger(__name__)
+
+SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"
+SUMMARY_URL = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary"
+PRESEASON = 1
+ATTEMPTS = 4
+
+
+class FeedError(RuntimeError):
+    pass
+
+
+class NotFound(FeedError):
+    """ESPN has no such resource (HTTP 404); retrying won't help."""
+
+
+def fetch_scoreboard(day, session=None, attempts=ATTEMPTS, backoff=2.0):
+    """The scoreboard JSON for one US Eastern date: schedule, scores, and moneylines
+    for games that haven't finished."""
+    return _get_json(SCOREBOARD_URL, {"dates": day.strftime("%Y%m%d")}, f"scoreboard for {day}",
+                     session, attempts, backoff)
+
+
+def fetch_summary(event_id, session=None, attempts=ATTEMPTS, backoff=2.0):
+    """One game's summary JSON. Unlike the scoreboard, it keeps moneylines after the game."""
+    return _get_json(SUMMARY_URL, {"event": event_id}, f"summary for game {event_id}",
+                     session, attempts, backoff)
+
+
+def _get_json(url, params, label, session, attempts, backoff):
+    """GET JSON, retrying errors, throttling and non-JSON replies with exponential backoff."""
+    http = session or requests
+    problem = None
+    for attempt in range(1, attempts + 1):
+        try:
+            resp = http.get(url, params=params, timeout=30, headers={"User-Agent": "nbagamblingsite/1.0"})
+            if resp.status_code == 200:
+                try:
+                    return resp.json()
+                except ValueError:
+                    problem = (f"non-JSON reply ({resp.headers.get('Content-Type')}, "
+                               f"{len(resp.content)} bytes): {resp.text[:200]!r}")
+            elif resp.status_code == 404:
+                raise NotFound(f"ESPN {label}: HTTP 404")
+            else:
+                problem = f"HTTP {resp.status_code}: {resp.text[:200]!r}"
+        except requests.RequestException as exc:
+            problem = repr(exc)
+        log.warning("ESPN %s, attempt %d of %d: %s", label, attempt, attempts, problem)
+        if attempt < attempts:
+            time.sleep(backoff * 2 ** (attempt - 1))
+    raise FeedError(f"ESPN {label} failed after {attempts} attempts: {problem}")
+
+
+def parse_scoreboard(data):
+    games = []
+    for event in data.get("events") or []:
+        try:
+            game = parse_event(event)
+        except (KeyError, TypeError, ValueError) as exc:
+            log.warning("Skipping unparseable event %s: %r", event.get("id"), exc)
+            continue
+        if game:
+            games.append(game)
+    return games
+
+
+def parse_event(event):
+    comp = (event.get("competitions") or [{}])[0]
+    sides = {c.get("homeAway"): c for c in comp.get("competitors") or []}
+    if "home" not in sides or "away" not in sides:
+        return None
+    home_name = sides["home"]["team"].get("displayName", "")
+    away_name = sides["away"]["team"].get("displayName", "")
+    home_team, away_team = canonical_team(home_name), canonical_team(away_name)
+    if not home_team or not away_team:
+        log.info("Skipping non-NBA matchup %s vs %s", away_name, home_name)
+        return None
+
+    season = event.get("season") or {}
+    if season.get("type") == PRESEASON:
+        return None
+
+    start = _parse_time(event.get("date") or comp["date"])
+    status = ((comp.get("status") or event.get("status") or {}).get("type")) or {}
+    completed = bool(status.get("completed"))
+    home_ml, away_ml = parse_moneylines(comp.get("odds") or [])
+    return {
+        "id": str(event["id"]),
+        "season": int(season.get("year") or _season_for(start)),
+        "season_type": season.get("type"),
+        "start_time": start.replace(tzinfo=None),
+        "game_date": start.astimezone(ET).date(),
+        "home_team": home_team,
+        "away_team": away_team,
+        "neutral_site": bool(comp.get("neutralSite")),
+        "state": status.get("state") or "pre",
+        "completed": completed,
+        "home_score": _score(sides["home"]) if completed else None,
+        "away_score": _score(sides["away"]) if completed else None,
+        "home_ml": home_ml,
+        "away_ml": away_ml,
+    }
+
+
+def parse_summary_moneylines(summary):
+    """(home, away) moneylines from a game summary's pickcenter, else (None, None)."""
+    return parse_moneylines(summary.get("pickcenter") or [])
+
+
+def parse_moneylines(odds_list):
+    """(home, away) American moneylines from the first provider that has both, else (None, None)."""
+    for odds in odds_list:
+        moneyline = odds.get("moneyline") or {}
+        home, away = _latest_line(moneyline.get("home")), _latest_line(moneyline.get("away"))
+        if home is None or away is None:
+            home = parse_american((odds.get("homeTeamOdds") or {}).get("moneyLine"))
+            away = parse_american((odds.get("awayTeamOdds") or {}).get("moneyLine"))
+        if home is not None and away is not None:
+            return home, away
+    return None, None
+
+
+def _latest_line(side):
+    if not side:
+        return None
+    for key in ("close", "current", "open"):
+        odds = parse_american((side.get(key) or {}).get("odds"))
+        if odds is not None:
+            return odds
+    return None
+
+
+def _score(competitor):
+    score = competitor.get("score")
+    if isinstance(score, dict):
+        score = score.get("value")
+    return int(float(score))
+
+
+def _parse_time(text):
+    return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+
+
+def _season_for(start):
+    # ESPN names seasons by the year they end: games from August on belong to next year's season.
+    return start.year + 1 if start.month >= 8 else start.year
+
+
+def _show_raw_odds(data):
+    """Print where odds appear in the feed for the first game, to debug parse_moneylines."""
+    events = data.get("events") or []
+    if not events:
+        print("No events on this date.")
+        return
+    event = events[0]
+    comp = (event.get("competitions") or [{}])[0]
+    print(f"{event.get('name')}: scoreboard competitions[0].odds =")
+    print(json.dumps(comp.get("odds"), indent=1)[:2500])
+    summary = fetch_summary(event["id"])
+    print(f"summary endpoint keys: {sorted(summary)}")
+    for key in ("pickcenter", "odds"):
+        if summary.get(key):
+            print(f"summary[{key!r}][0] =")
+            print(json.dumps(summary[key][0], indent=1)[:2500])
+
+
+if __name__ == "__main__":
+    # Debug helper: python -m patSite.pipeline.espn 2026-01-15 [--raw]
+    logging.basicConfig(level=logging.INFO)
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    day = date.fromisoformat(args[0]) if args else datetime.now(ET).date()
+    data = fetch_scoreboard(day)
+    if "--raw" in sys.argv:
+        _show_raw_odds(data)
+    for g in parse_scoreboard(data):
+        print(g)

@@ -1,0 +1,163 @@
+{% extends "base.jinja2" %}
+{% from "_teams.jinja2" import logo, result_badge %}
+
+{% macro tile(label, value, note=None) %}
+<div class="col-6 col-lg-3">
+  <div class="card h-100">
+    <div class="card-body">
+      <div class="small text-body-secondary">{{ label }}</div>
+      <div class="fs-3 fw-semibold">{{ value }}</div>
+      {% if note %}<div class="small text-body-secondary">{{ note }}</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% block content %}
+<h1 class="h3">Model performance</h1>
+<p class="text-body-secondary">
+  Every pick is recorded before tip-off and graded after the game, so this is the model's real track record.
+  Bets are 1 unit each at the odds shown when the pick was made.
+</p>
+
+<h2 class="h5 mt-4">Live record</h2>
+{% if record %}
+<p class="small text-body-secondary">Since {{ record.since|long_date }}.</p>
+<div class="row g-3 mb-3">
+  {{ tile("Picks correct", record.accuracy|pct(1), record.correct ~ "–" ~ (record.picks - record.correct)) }}
+  {{ tile("Value bets", record.bet_wins ~ "–" ~ (record.bets - record.bet_wins), record.bets ~ " bets") }}
+  {{ tile("Units won", record.units|units, "1 unit per bet") }}
+  {{ tile("Return on bets", record.roi|pct(1), "profit ÷ amount staked") }}
+</div>
+{% if record.brier_model is not none %}
+<p class="small">
+  Brier score on {{ record.priced }} games with odds (lower is better):
+  model <strong>{{ '%.4f'|format(record.brier_model) }}</strong>,
+  betting market <strong>{{ '%.4f'|format(record.brier_market) }}</strong>.
+  {% if record.brier_model < record.brier_market %}The model's probabilities have been more accurate than the market's so far.{% else %}The market's probabilities have been more accurate than the model's so far.{% endif %}
+</p>
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-sm align-middle numbers">
+    <caption class="caption-top">Most recent {{ recent|length }} graded picks</caption>
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Matchup</th>
+        <th scope="col">Pick</th>
+        <th scope="col" class="text-end">Model</th>
+        <th scope="col">Result</th>
+        <th scope="col">Bet</th>
+        <th scope="col" class="text-end">Units</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in recent %}
+      <tr>
+        <td class="text-nowrap">{{ '{:%b} {}'.format(p.game.game_date, p.game.game_date.day) }}</td>
+        <td class="text-nowrap">{{ p.game.away_team }} {{ p.game.away_score }} @ {{ p.game.home_team }} {{ p.game.home_score }}</td>
+        <td class="text-nowrap">{{ logo(p.pick) }} {{ p.pick }}</td>
+        <td class="text-end">{{ p.pick_prob|pct }}</td>
+        <td>{{ result_badge(p) }}</td>
+        <td class="text-nowrap">{% if p.bet_side %}{{ p.bet_team }} {{ p.bet_odds|american }}{% else %}<span class="text-body-secondary">–</span>{% endif %}</td>
+        <td class="text-end">{{ p.profit|units }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="alert alert-secondary">No graded picks yet. The record starts once the first picked games finish.</div>
+{% endif %}
+
+<h2 class="h5 mt-5">Backtest</h2>
+{% set m = run.metrics if run else None %}
+{% if m and m.games %}
+<p class="small text-body-secondary">
+  Walk-forward test on {{ m.games }} games from {{ m.start }} to {{ m.end }}: each day's games were predicted by a model
+  trained only on earlier games (data since {{ m.data_start }}). This is a simulation, not live results.
+  Bets are settled at the last line in the data, usually the closing line, which is the hardest price to beat.
+  Updated {{ run.created_at|et_stamp }}.
+</p>
+
+<div class="table-responsive">
+  <table class="table table-sm numbers w-auto">
+    <thead><tr><th scope="col"></th><th scope="col" class="text-end">Accuracy</th><th scope="col" class="text-end">Log loss</th><th scope="col" class="text-end">Brier</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">Model</th><td class="text-end">{{ m.model.accuracy|pct(1) }}</td><td class="text-end">{{ '%.4f'|format(m.model.log_loss) }}</td><td class="text-end">{{ '%.4f'|format(m.model.brier) }}</td></tr>
+      <tr><th scope="row">Elo only</th><td class="text-end">{{ m.elo_only.accuracy|pct(1) }}</td><td class="text-end">{{ '%.4f'|format(m.elo_only.log_loss) }}</td><td class="text-end">{{ '%.4f'|format(m.elo_only.brier) }}</td></tr>
+      <tr><th scope="row">Always pick home team</th><td class="text-end">{{ m.home_win_rate|pct(1) }}</td><td class="text-end">–</td><td class="text-end">–</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% if m.vs_market %}
+<h3 class="h6 mt-3">Against the betting market ({{ m.vs_market.games }} games)</h3>
+<div class="table-responsive">
+  <table class="table table-sm numbers w-auto">
+    <thead><tr><th scope="col"></th><th scope="col" class="text-end">Accuracy</th><th scope="col" class="text-end">Log loss</th><th scope="col" class="text-end">Brier</th></tr></thead>
+    <tbody>
+      {% for label, key in [("Model", "model"), ("Market (margin removed)", "market"), ("Model + market combined", "combined")] %}
+      {% set s = m.vs_market[key] %}
+      <tr><th scope="row">{{ label }}</th><td class="text-end">{{ s.accuracy|pct(1) }}</td><td class="text-end">{{ '%.4f'|format(s.log_loss) }}</td><td class="text-end">{{ '%.4f'|format(s.brier) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="small text-body-secondary">
+  Lower log loss and Brier mean more accurate probabilities. To have an edge, the model has to beat the market here, not just pick winners.
+  {% if m.blend %}
+  The combined estimate weights the market by <strong>{{ '%.2f'|format(m.blend.market_weight) }}</strong> and the model by
+  <strong>{{ '%.2f'|format(m.blend.model_weight) }}</strong> (fitted on {{ m.blend.games }} games). A model weight near zero means the
+  model adds little beyond the betting line; below {{ m.min_model_weight }} the site flags no bets.
+  {% endif %}
+</p>
+
+<div class="table-responsive">
+  <table class="table table-sm numbers w-auto">
+    <caption class="caption-top">Bets chosen from the combined estimate</caption>
+    <thead><tr><th scope="col">Bet when expected return is at least</th><th scope="col" class="text-end">Bets</th><th scope="col" class="text-end">Won</th><th scope="col" class="text-end">Units</th><th scope="col" class="text-end">Return</th></tr></thead>
+    <tbody>
+      {% for b in m.betting %}
+      <tr><td>{{ b.min_ev|pct }}{% if b.min_ev == m.site_min_ev %} (the site's rule){% endif %}</td><td class="text-end">{{ b.bets }}</td><td class="text-end">{{ b.wins }}</td><td class="text-end">{{ b.units|units }}</td><td class="text-end">{{ b.roi|pct(1) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="small text-body-secondary">Not enough games with moneylines yet ({{ m.games_with_odds }} so far) to compare the model with the market or test bets.</p>
+{% endif %}
+
+{% if m.calibration %}
+<h3 class="h6 mt-3">Calibration</h3>
+<div class="table-responsive">
+  <table class="table table-sm numbers w-auto">
+    <thead><tr><th scope="col">Model confidence</th><th scope="col" class="text-end">Games</th><th scope="col" class="text-end">Predicted</th><th scope="col" class="text-end">Actually won</th></tr></thead>
+    <tbody>
+      {% for c in m.calibration %}
+      <tr><td>{{ c.range }}</td><td class="text-end">{{ c.games }}</td><td class="text-end">{{ c.predicted|pct(1) }}</td><td class="text-end">{{ c.actual|pct(1) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if m.coefficients %}
+<h3 class="h6 mt-3">What the model weighs</h3>
+<div class="table-responsive">
+  <table class="table table-sm numbers w-auto">
+    <thead><tr><th scope="col">Feature</th><th scope="col" class="text-end">Weight</th></tr></thead>
+    <tbody>
+      {% for name, weight in m.coefficients.items() %}
+      <tr><td>{{ feature_labels.get(name, name) }}</td><td class="text-end">{{ '%+.3f'|format(weight) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="small text-body-secondary">Logistic-regression weights: positive values raise the home team's win probability.</p>
+{% endif %}
+{% else %}
+<div class="alert alert-secondary">The backtest runs once there are enough 2026 games in the database.</div>
+{% endif %}
+{% endblock %}

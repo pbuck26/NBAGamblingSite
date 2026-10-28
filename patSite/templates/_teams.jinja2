@@ -1,0 +1,7 @@
+{# Team logo; decorative because the team name is always shown next to it. #}
+{% macro logo(team) %}<img class="team-logo" src="{{ url_for('static', filename=team ~ '.png') }}" alt="">{% endmacro %}
+
+{# Pick outcome as text plus color, never color alone. #}
+{% macro result_badge(pred) %}
+  {% if not pred.graded %}{% elif pred.correct %}<span class="badge text-bg-success">✓ Won</span>{% else %}<span class="badge text-bg-danger">✗ Lost</span>{% endif %}
+{% endmacro %}
