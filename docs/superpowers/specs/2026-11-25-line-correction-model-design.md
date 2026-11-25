@@ -10,7 +10,7 @@ games) and adds almost nothing on top of it, so more team-strength statistics wo
 the line already prices them.
 
 The new approach starts from the line and learns small, consistent corrections from
-inputs the line may underweight. Pat picked "approach 2 + 3": blind-spot features
+inputs the line may underweight. The owner picked "approach 2 + 3": blind-spot features
 (schedule and travel, motivation, public money, the line's own recent errors, variance)
 plus referee and player-availability features.
 
